@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0F6E56">
+<title>AitkenTech SWMS Library</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root{
+  --teal:#4EC6C0;--teal-dk:#0F6E56;--teal-lt:#E1F5EE;
+  --navy:#1A1A2E;--bg:#F4F6F5;--surface:#fff;
+  --border:rgba(0,0,0,0.08);--text:#1A1A2E;--text2:#5A6472;--text3:#9BA3AD;
+  --r:14px;--r-sm:8px;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);max-width:480px;margin:0 auto;padding-bottom:32px}
+
+.app-header{background:var(--navy);padding:52px 20px 20px;display:flex;align-items:flex-end;justify-content:space-between}
+.app-header h1{color:#fff;font-size:22px;font-weight:600}
+.app-header a{color:var(--teal);font-size:13px;font-weight:500;text-decoration:none}
+
+.search-wrap{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+.search-wrap input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:999px;
+  font-family:var(--font);font-size:15px;background:var(--bg);color:var(--text)}
+.search-wrap input:focus{outline:none;border-color:var(--teal)}
+
+.list{padding:12px 16px}
+.swms-item{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);
+  margin-bottom:8px;overflow:hidden;transition:box-shadow .15s}
+.swms-item-hdr{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.swms-item-hdr:active{background:var(--bg)}
+.ref-badge{background:var(--teal-lt);color:var(--teal-dk);font-family:var(--mono);
+  font-size:11px;font-weight:500;padding:4px 8px;border-radius:6px;flex-shrink:0}
+.swms-name{font-size:14px;font-weight:500;flex:1;line-height:1.3}
+.swms-chevron{color:var(--text3);font-size:16px;transition:transform .2s;flex-shrink:0}
+.swms-chevron.open{transform:rotate(90deg)}
+
+.swms-body{display:none;border-top:1px solid var(--border);padding:16px}
+.swms-body.open{display:block}
+
+.swms-section{margin-bottom:16px}
+.swms-section:last-child{margin-bottom:0}
+.swms-section-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--teal-dk);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--teal-lt)}
+
+.ppe-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ppe-item{background:var(--teal-lt);border-radius:6px;padding:6px 8px;
+  font-size:12px;color:var(--teal-dk);font-weight:500;line-height:1.3}
+
+.step-card{background:var(--bg);border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid var(--border)}
+.step-card:last-child{margin-bottom:0}
+.step-hdr{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.step-num{background:var(--teal-dk);color:#fff;width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.step-task{font-size:13px;font-weight:600;flex:1;line-height:1.4}
+.step-hazards{font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5}
+.step-hazards strong{color:var(--text);font-weight:600}
+.step-controls{font-size:12px;color:var(--text2);line-height:1.5}
+.step-controls strong{color:var(--teal-dk);font-weight:600}
+.risk-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.risk-pill{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.risk-pill.EXTREME{background:#7B0000;color:#fff}
+.risk-pill.HIGH{background:#E67E22;color:#fff}
+.risk-pill.MEDIUM{background:#F1C40F;color:#7A4010}
+.risk-pill.LOW{background:#27AE60;color:#fff}
+.risk-arrow{font-size:12px;color:var(--text3)}
+
+.leg-item{font-size:12px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.4}
+.leg-item:last-child{border-bottom:none}
+.leg-item::before{content:'• ';color:var(--teal-dk);font-weight:700}
+
+.empty{text-align:center;padding:48px 20px;color:var(--text3);font-size:14px}
+.empty-icon{font-size:36px;margin-bottom:12px}
+
+.cat-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--text3);padding:16px 0 6px;display:block}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>SWMS Library</h1>
+  <a href="index.html">← Back</a>
+</div>
+
+<div class="search-wrap">
+  <input type="search" id="search" placeholder="Search SWMS..." oninput="filterSwms()">
+</div>
+
+<div class="list" id="list"></div>
+
+<script>
+const SWMS = [
+  {ref:'001',name:'Domestic Wiring & Electrical Installation',cat:'Core electrical',
+   ppe:['Safety glasses','Steel-capped boots','Hard hat (overhead work)','Hi-vis vest','Insulated gloves (1000V)','Dust mask P2 (drilling)','Cut-resistant gloves (cable handling)','Sun protection (outdoor)','Hearing protection'],
+   legislation:['Work Health and Safety Act 2011 (NSW)','WHS Regulation 2017 (NSW)','Code of Practice: Managing Electrical Risks in the Workplace','AS/NZS 3000:2018 Wiring Rules','AS/NZS 3008.1.1 Cable selection'],
+   steps:[
+    {n:1,task:'Site inspection & hazard assessment',hazards:'Unidentified hazards, asbestos, existing live services, unstable surfaces, trip hazards',ir:'HIGH',controls:'Inspect site before commencing. Check asbestos register. Locate and mark all existing services. Identify and control trip hazards. Brief all workers on site-specific hazards.',rr:'LOW'},
+    {n:2,task:'Isolation of existing electrical supply',hazards:'Electric shock, arc flash, inadvertent re-energisation',ir:'HIGH',controls:'Lock Out / Tag Out (LOTO) applied. Test for de-energisation with calibrated voltage tester before touching conductors. Inform occupants. Display warning tags on switchboard.',rr:'LOW'},
+    {n:3,task:'Cable installation — routing, pulling and securing',hazards:'Manual handling injury, sharp cable edges, contact with live cables, roof space hazards',ir:'MEDIUM',controls:'Use cable-pulling aids. Wear cut-resistant gloves. Confirm all circuits isolated. In roof space: use lighting, wear P2 mask, check for heat stress. No work in roof space above 35°C.',rr:'LOW'},
+    {n:4,task:'Connection of wiring at outlets, switches and fixtures',hazards:'Electric shock from residual charge or re-energisation, incorrect termination',ir:'HIGH',controls:'Verify isolation with tester before connecting. Use 1000V insulated tools. Double-check polarity. Connections made to AS/NZS 3000. Do not reconnect until all connections verified.',rr:'LOW'},
+    {n:5,task:'Testing and inspection prior to energisation',hazards:'Defective installation causing shock or fire upon energisation',ir:'HIGH',controls:'Conduct continuity, insulation resistance, and polarity tests per AS/NZS 3000. Inspect all connections visually. Confirm earth continuity. Record test results. Remove all LOTO before energising.',rr:'LOW'},
+    {n:6,task:'Energisation and functional testing',hazards:'Electric shock, equipment damage, arc flash on first energisation',ir:'MEDIUM',controls:'Stand clear when energising. Confirm RCD operation. Test all outlets and switches. Ensure no persons are in contact with installation at moment of energisation.',rr:'LOW'},
+    {n:7,task:'Clean up and site reinstatement',hazards:'Cuts from waste cable offcuts, trip hazards',ir:'LOW',controls:'Collect and dispose of all cable offcuts and waste. Remove all tools. Reinstate any penetrations through fire-rated walls. Leave site clean.',rr:'LOW'},
+   ]},
+  {ref:'002',name:'Switchboard Installation, Upgrade & Maintenance',cat:'Core electrical',
+   ppe:['Arc flash rated PPE (minimum Cat 1)','Face shield (arc rated)','Insulated gloves (1000V)','Safety glasses','Steel-capped boots','Hi-vis vest','Flame-resistant clothing','Hearing protection'],
+   legislation:['WHS Act 2011 (NSW)','WHS Regulation 2017 (NSW)','Code of Practice: Managing Electrical Risks','AS/NZS 3000:2018 Wiring Rules','AS/NZS 61439 Low-voltage switchgear assemblies'],
+   steps:[
+    {n:1,task:'Site assessment and isolation planning',hazards:'Live conductors, arc flash, multiple supply sources',ir:'EXTREME',controls:'Identify all supply sources including solar/battery/generator. Plan isolation sequence. Confirm with supply authority if required. Prepare LOTO equipment.',rr:'MEDIUM'},
+    {n:2,task:'Isolation — de-energise all circuits',hazards:'Electric shock, arc flash during isolation',ir:'EXTREME',controls:'Wear full arc flash PPE during isolation. Turn off all sub-circuits before isolating mains. Apply LOTO. Test all busbars and terminals with calibrated tester. Allow capacitors 5 minutes to discharge.',rr:'MEDIUM'},
+    {n:3,task:'Physical removal or installation of components',hazards:'Manual handling, sharp metal edges, residual energy in capacitors',ir:'MEDIUM',controls:'Two-person lift for heavy panels (>16kg). Wear cut-resistant gloves. Check for residual charge. Ensure adequate ventilation.',rr:'LOW'},
+    {n:4,task:'Wiring, termination and labelling',hazards:'Incorrect termination causing shock or fire, incorrect labelling',ir:'HIGH',controls:'Follow drawings. Use correct cable size per AS/NZS 3000. Torque all terminals to spec. Label all circuits accurately. Double check polarity.',rr:'LOW'},
+    {n:5,task:'Pre-energisation inspection and testing',hazards:'Defective installation, incorrect protection settings',ir:'HIGH',controls:'Full visual inspection. Continuity, insulation resistance and earth loop impedance testing. Verify RCD trip times. Confirm MCB ratings. Record all test results.',rr:'LOW'},
+    {n:6,task:'Energisation — restore supply',hazards:'Arc flash, equipment damage on first energisation',ir:'HIGH',controls:'Maintain arc flash PPE until panel is closed. Energise mains first, then sub-circuits one at a time. Stand to side of panel when closing.',rr:'LOW'},
+    {n:7,task:'Functional testing and handover',hazards:'Incorrect circuit operation, mislabelled circuits',ir:'MEDIUM',controls:'Test each circuit. Test all RCDs. Update circuit schedule. Complete and issue Electrical Safety Certificate. Brief client on switchboard operation.',rr:'LOW'},
+   ]},
+  {ref:'003',name:'Electrical Testing & Tagging of Portable Appliances',cat:'Core electrical',
+   ppe:['Safety glasses','Insulated gloves (where applicable)','Steel-capped boots','Hi-vis vest (where required)','Sun protection'],
+   legislation:['WHS Act 2011 (NSW)','WHS Regulation 2017 (NSW)','AS/NZS 3760:2022 In-service safety inspection and testing','AS/NZS 3012:2019 Construction & demolition sites'],
+   steps:[
+    {n:1,task:'Site setup and equipment preparation',hazards:'Uncalibrated tester, damage to test equipment',ir:'LOW',controls:'Inspect test equipment before use. Confirm PAT tester has current calibration certificate. Set up away from pedestrian traffic.',rr:'LOW'},
+    {n:2,task:'Visual inspection of each appliance',hazards:'Contact with damaged insulation or exposed conductors',ir:'MEDIUM',controls:'Do not plug in any appliance before visual inspection. Check for damaged cord, exposed conductors, cracked housing, burn marks. Tag and quarantine failed items immediately.',rr:'LOW'},
+    {n:3,task:'Electrical testing — earth continuity, insulation resistance, polarity',hazards:'Electric shock from faulty appliance during testing',ir:'MEDIUM',controls:'Use PAT tester with auto-sequencing. Ensure leads are in good condition. Do not touch terminals during HV insulation test. Record all test results.',rr:'LOW'},
+    {n:4,task:'Tagging — pass or fail',hazards:'Incorrectly tagged items returned to service',ir:'MEDIUM',controls:'Apply PASS tag with test date, due date, tester ID. Apply FAIL/OUT OF SERVICE tag to failing items and remove from service immediately.',rr:'LOW'},
+    {n:5,task:'Record keeping and reporting',hazards:'Incomplete records leading to non-compliance',ir:'LOW',controls:'Record all results in test register. Provide client with copy. Retain records for minimum 7 years per AS/NZS 3760.',rr:'LOW'},
+   ]},
+  {ref:'004',name:'Working at Heights — Ladder Use',cat:'Working at heights',
+   ppe:['Steel-capped boots (non-slip)','Safety glasses','Hi-vis vest','Hard hat (overhead hazard)','Tool lanyard (all tools above 2m)','Sun protection'],
+   legislation:['WHS Act 2011 (NSW)','Code of Practice: Managing the Risk of Falls','AS/NZS 1892.1:2018 Portable ladders — Metal','AS/NZS 1892.5:2020 Portable ladders — Safe use'],
+   steps:[
+    {n:1,task:'Pre-use inspection of ladder',hazards:'Use of defective ladder causing collapse or fall',ir:'HIGH',controls:'Inspect ladder before each use. Check rungs, stiles, feet, locking mechanisms. Do not use damaged ladders. Tag OUT OF SERVICE if defective. Confirm rating is suitable for user weight plus tools.',rr:'LOW'},
+    {n:2,task:'Site assessment and ladder placement',hazards:'Ladder slipping, sinking, overhead powerlines, unstable surfaces',ir:'HIGH',controls:'Set up on firm level surface. Use levellers on uneven ground. Minimum 3m clearance from overhead powerlines — treat all as live. For extension ladders: 1:4 angle ratio, extend 1m above landing.',rr:'LOW'},
+    {n:3,task:'Ascending, working and descending',hazards:'Fall from height, overreaching, dropping tools onto persons below',ir:'HIGH',controls:'3 points of contact at all times. Face ladder when ascending/descending. Use tool belt — do not carry materials. Keep belt buckle between stiles. No working from top two rungs of step ladder. Erect exclusion zone below.',rr:'MEDIUM'},
+    {n:4,task:'Electrical work from ladder',hazards:'Electric shock and fall — combined risk',ir:'HIGH',controls:'Use fibreglass or timber (non-conductive) ladder for all electrical work. Confirm circuits isolated. Insulated tools only. One hand on ladder where practicable.',rr:'MEDIUM'},
+    {n:5,task:'Ladder storage and transport',hazards:'Unsecured ladder falling from vehicle, damage during transport',ir:'MEDIUM',controls:'Secure to vehicle roof rack with rated tie-downs at minimum two points. Use ladder protection sleeves. Store horizontally supported at multiple points.',rr:'LOW'},
+   ]},
+  {ref:'005',name:'Underground Cable & Pit / Manhole Work',cat:'Underground',
+   ppe:['Safety glasses','Steel-capped boots','Hi-vis vest','Hard hat','Insulated gloves (1000V)','Nitrile gloves','Dust/vapour mask P2','Hearing protection','4-gas monitor (O2, CO, H2S, LEL)'],
+   legislation:['WHS Act 2011 (NSW)','Code of Practice: Confined Spaces','AS 2865:2009 Confined spaces','Dial Before You Dig — 1100','AS/NZS 3000:2018 Section 3 Underground wiring'],
+   steps:[
+    {n:1,task:'Dial Before You Dig and service location',hazards:'Striking underground gas, water, comms or electrical services',ir:'EXTREME',controls:'Submit DBYD enquiry minimum 2 business days before work. Use cable locator on site before any digging. Hand excavate within 300mm of any marked service. Mark all services.',rr:'MEDIUM'},
+    {n:2,task:'Excavation and trenching',hazards:'Trench collapse, striking live services, manual handling',ir:'HIGH',controls:'Shore or batter trenches deeper than 1.5m. Spoil kept 500mm from edge. Stop mechanical excavation within 300mm of any service — hand dig only. Inspect trench walls before entry.',rr:'MEDIUM'},
+    {n:3,task:'Pit / manhole opening and assessment',hazards:'Confined space hazards — oxygen deficiency, toxic gases, entrapment',ir:'EXTREME',controls:'Treat all pits as potential confined spaces until tested. Atmospheric testing with 4-gas monitor before entry. Forced ventilation if gases detected. Entry permit required. Standby person at surface at all times.',rr:'MEDIUM'},
+    {n:4,task:'Cable installation — underground',hazards:'Struck by cable drum, contact with existing live cables, snakes in pit',ir:'HIGH',controls:'Use cable drum stand. Team lift for drums >25kg. Minimum burial depth per AS/NZS 3000. Check pit for snakes before entry. Use hook to inspect before inserting hands.',rr:'LOW'},
+    {n:5,task:'Jointing, termination and pit reinstatement',hazards:'Electric shock from existing live cables',ir:'HIGH',controls:'LOTO on all relevant circuits. Test all conductors before touching. Seal pits to prevent water ingress. Reinstate pit covers to manufacturer torque specifications.',rr:'LOW'},
+    {n:6,task:'Trench backfill and reinstatement',hazards:'Cable damage during backfill, trench collapse',ir:'MEDIUM',controls:'Place cable protection marker tape 150mm above cable. Compact backfill in 150mm layers. Remove shoring progressively. Reinstate surface to original condition.',rr:'LOW'},
+   ]},
+  {ref:'006',name:'Roof Work / Working on Rooftops',cat:'Working at heights',
+   ppe:['Steel-capped boots (non-slip)','Safety glasses','Hi-vis vest','Hard hat','Tool lanyard (all tools)','Sun protection','Fall arrest harness (where >2m)','Knee pads (sheet metal roofs)','Hearing protection'],
+   legislation:['WHS Act 2011 (NSW)','Code of Practice: Managing the Risk of Falls','AS/NZS 1891.1 Industrial fall-arrest systems','AS 1657 Fixed platforms and stairways'],
+   steps:[
+    {n:1,task:'Pre-work roof inspection from ground level',hazards:'Fragile roof surfaces, skylights, unstable sheets, overhead powerlines',ir:'HIGH',controls:'Inspect roof from ground before stepping onto surface. Identify all fragile areas, skylights, penetrations. Measure clearance from overhead powerlines — minimum 3m. Mark fragile zones. Do not proceed if wind is excessive.',rr:'MEDIUM'},
+    {n:2,task:'Setting up fall protection',hazards:'Fall from height — leading cause of fatality in construction',ir:'EXTREME',controls:'Assess fall protection hierarchy: (1) eliminate, (2) passive protection — edge protection/scaffolding, (3) fall restraint, (4) fall arrest — harness + rated anchor. Install rated anchor before accessing roof. Exclusion zone below at all times.',rr:'MEDIUM'},
+    {n:3,task:'Accessing the roof via ladder',hazards:'Fall during ascent/descent, ladder slipping',ir:'HIGH',controls:'Use fibreglass ladder for electrical work. Secure top and base. Extend 1m above roof edge. 3 points of contact. Attach harness lanyard to anchor before stepping off ladder.',rr:'LOW'},
+    {n:4,task:'Moving and working on roof surface',hazards:'Slipping on wet/mossy/steep surface, stepping through fragile material, heat stress',ir:'HIGH',controls:'Use roof ladder or crawl boards on steep or fragile surfaces. Step on structural members only. Never step on skylights or fibreglass sheets. Check for heat — metal roofs can exceed 70°C. Work in cooler parts of the day.',rr:'MEDIUM'},
+    {n:5,task:'Electrical work on roof',hazards:'Electric shock from existing services, dropped tools striking persons below',ir:'HIGH',controls:'Confirm isolation with LOTO before connecting. Exclusion zone maintained below. Use tool lanyards. Insulated tools. Do not work on roof during lightning, rain, or high wind.',rr:'LOW'},
+    {n:6,task:'Descending and clearing up',hazards:'Fall during descent, unsecured materials falling',ir:'HIGH',controls:'Secure or lower all tools before descending. Remove harness only once both feet are on secured ladder. Collect all tools and waste at ground level. Remove exclusion zone once all personnel are clear.',rr:'LOW'},
+   ]},
+  {ref:'007',name:'Generator & Temporary Power Supply',cat:'Specialist electrical',
+   ppe:['Safety glasses','Steel-capped boots','Hi-vis vest','Insulated gloves (1000V)','Hearing protection','P2 mask (enclosed space)','Fire extinguisher on site'],
+   legislation:['WHS Act 2011 (NSW)','AS/NZS 3012:2019 Construction & demolition sites','AS 2790 Electricity generating sets','Code of Practice: Managing Electrical Risks'],
+   steps:[
+    {n:1,task:'Site assessment and generator placement',hazards:'Carbon monoxide poisoning (enclosed space), fire from fuel spill, electrocution from incorrect connection',ir:'EXTREME',controls:'Never operate generator indoors or within 3m of any opening to an enclosed space. Position downwind of work area. On stable level ground. Check for fire hazards. Confirm generator rating is adequate.',rr:'MEDIUM'},
+    {n:2,task:'Refuelling',hazards:'Fire/explosion from fuel spill or static ignition',ir:'HIGH',controls:'Always refuel with generator stopped and cooled. No smoking or naked flames within 3m. Use approved fuel container. Wipe up spills immediately. Do not overfill.',rr:'LOW'},
+    {n:3,task:'Connection of temporary distribution board / leads',hazards:'Electric shock from incorrect connection, overloaded circuits',ir:'HIGH',controls:'All temporary distribution boards must include RCD protection per AS/NZS 3012. Use only rated extension leads in good condition. Do not daisy-chain beyond rated length. Protect leads from mechanical damage.',rr:'LOW'},
+    {n:4,task:'Generator operation and monitoring',hazards:'Back-feed to grid, overloading, fuel exhaustion causing surge',ir:'HIGH',controls:'Never connect generator to fixed wiring without approved changeover switch — risk of back-feed electrocuting line workers. Monitor fuel level and load. Do not exceed 80% of rated capacity continuously.',rr:'LOW'},
+    {n:5,task:'Shutdown and disconnection',hazards:'Burns from hot exhaust, electric shock during disconnection',ir:'MEDIUM',controls:'Disconnect all loads before shutting down. Allow to cool before covering or transporting. Check for fuel leaks. Secure in vehicle before transport.',rr:'LOW'},
+   ]},
+  {ref:'008',name:'Pole Work & Proximity to Overhead Power Lines',cat:'Specialist electrical',
+   ppe:['Steel-capped boots','Safety glasses','Hi-vis vest','Hard hat','Insulated gloves','Arc flash rated PPE','Fall arrest harness (pole climbing)','Sun protection','Two-way radio'],
+   legislation:['AS/NZS 4836 Safe working on or near low voltage electrical installations','Ausgrid / Essential Energy Network Standards','Code of Practice: Work Near Overhead Power Lines','NSW Electricity Supply Act 1995'],
+   steps:[
+    {n:1,task:'Identify overhead lines and safe approach distances',hazards:'Electrocution from contact or flashover — often fatal',ir:'EXTREME',controls:'Contact Essential Energy (13 23 91) before work near overhead lines. Minimum safe approach: <1kV = 0.5m; 1–33kV = 1.5m; >33kV = contact supply authority. Treat all lines as live. Barricade below lines.',rr:'MEDIUM'},
+    {n:2,task:'Obtain permits and authority approvals',hazards:'Commencing work without appropriate approvals',ir:'EXTREME',controls:'Written approval from supply authority before working on or within approach distance of any network assets. Do not commence until permit issued and isolations confirmed in writing.',rr:'MEDIUM'},
+    {n:3,task:'Establishing exclusion zones and traffic management',hazards:'Vehicles or plant contacting overhead lines, public entering work zone',ir:'HIGH',controls:'Establish and barricade exclusion zone per approach distances. Height restriction bars or spotters where vehicles must pass. Traffic management plan if work affects road.',rr:'LOW'},
+    {n:4,task:'Pole climbing and working at height',hazards:'Fall from pole, contact with live conductors, pole instability',ir:'EXTREME',controls:'Inspect pole for soundness before climbing — check for rot, damage, ant infestation. Do not climb condemned poles. Use rated climbing spikes, belt and safety strap. Wear fall arrest harness. Do not work alone.',rr:'MEDIUM'},
+    {n:5,task:'Service connection / disconnection work',hazards:'Electric shock from live service conductors, arc flash',ir:'EXTREME',controls:'All work on live conductors requires supply authority approval and compliance with AS/NZS 4836. Use appropriate insulated tools and PPE. Only licensed electricians to perform connections. No work on live conductors in rain.',rr:'MEDIUM'},
+    {n:6,task:'Completion, site reinstatement and permit return',hazards:'Hazards remaining after work',ir:'MEDIUM',controls:'Inspect all connections before departing. Reinstate all covers and enclosures. Notify supply authority of completion and return permit. Remove all barricading. Brief property owner on changes made.',rr:'LOW'},
+   ]},
+  {ref:'009',name:'Smoke Alarm Installation & Replacement',cat:'Core electrical',
+   ppe:['Safety glasses','Steel-capped boots','P2 dust mask','Hi-vis vest','Insulated gloves','Sun protection (roof space)','Hearing protection (drilling)'],
+   legislation:['Environmental Planning and Assessment Act 1979 (NSW)','EP&A Regulation 2021 — Smoke Alarm provisions','AS 3786:2014 Smoke alarms','NSW Fair Trading — Smoke Alarm Legislation'],
+   steps:[
+    {n:1,task:'Client consultation and site assessment',hazards:'Non-compliant alarm type, incorrect placement, existing asbestos ceilings',ir:'MEDIUM',controls:'Confirm alarm type (photoelectric for new installations). Check building age for potential ACM — pre-2003 treat as asbestos present. Identify correct placement per AS 3786 and NSW legislation.',rr:'LOW'},
+    {n:2,task:'Isolation of circuit where hardwired alarm required',hazards:'Electric shock during connection to mains circuit',ir:'HIGH',controls:'LOTO on lighting circuit. Test for de-energisation. Inform occupants circuit is isolated.',rr:'LOW'},
+    {n:3,task:'Ceiling penetration — drilling or cutting',hazards:'Contact with existing wiring, pipes; dust/fibres from ceiling material',ir:'MEDIUM',controls:'Use cable detector before drilling. Wear P2 mask. Inspect roof space before penetrating. If asbestos suspected — cease work and arrange testing.',rr:'LOW'},
+    {n:4,task:'Working in roof space for interconnection cabling',hazards:'Heat stress, fall through ceiling, contact with live wiring, vermin',ir:'HIGH',controls:'Do not enter roof space above 35°C. Step on joists only. Confirm all circuits isolated. Check for vermin before inserting hands. Wear P2 mask. Have another person aware of location.',rr:'LOW'},
+    {n:5,task:'Alarm connection and installation',hazards:'Incorrect wiring causing alarm failure',ir:'MEDIUM',controls:'Follow manufacturer wiring instructions. Confirm correct polarity. Secure alarm base firmly. Test interconnection of all alarms before reinstating power.',rr:'LOW'},
+    {n:6,task:'Testing and client handover',hazards:'Non-functional alarm left in place',ir:'MEDIUM',controls:'Test every alarm using test button. Test interconnection — all alarms must sound when one triggered. Provide written record of alarm locations and installation date. Advise on maintenance obligations.',rr:'LOW'},
+   ]},
+  {ref:'010',name:'Solar PV System Installation',cat:'Specialist electrical',
+   ppe:['Arc flash rated PPE (Cat 1)','Face shield (arc rated)','Insulated gloves (1000V DC rated)','Safety glasses','Steel-capped boots (non-slip)','Hi-vis vest','Hard hat','Fall arrest harness','Tool lanyards','Sun protection','P2 dust mask'],
+   legislation:['AS/NZS 5033:2021 PV arrays','AS/NZS 4777.1:2016 Grid connection via inverters','Clean Energy Council (CEC) Solar Accreditation','Ausgrid / Essential Energy connection requirements','AS/NZS 3000:2018 Section 4'],
+   steps:[
+    {n:1,task:'Site assessment — roof, electrical and grid connection',hazards:'Roof structural inadequacy, incorrect system sizing, non-compliant grid connection',ir:'HIGH',controls:'Assess roof structure for load capacity. Check orientation and shading. Review existing switchboard. Confirm grid connection requirements with network operator. CEC accredited designer to confirm system design.',rr:'LOW'},
+    {n:2,task:'Roof access and fall protection setup',hazards:'Fall from height — primary risk for solar installation fatalities',ir:'EXTREME',controls:'Install rated anchor points before accessing work area. Use fall arrest harness connected at all times. Exclusion zone below entire work area. No roof work in rain, high wind, or on wet surfaces. Two-person team for roof work.',rr:'MEDIUM'},
+    {n:3,task:'Mounting system and panel installation',hazards:'Manual handling of panels (20-25kg), laceration from panel edges, panels acting as sails in wind',ir:'HIGH',controls:'Two-person lift for all panels. Wear cut-resistant gloves. Do not install panels in wind >40km/h. Secure each panel immediately after placement. Use tool lanyards for all tools.',rr:'LOW'},
+    {n:4,task:'DC wiring — string connections',hazards:'DC electric shock — panels generate voltage as soon as exposed to light. DC arc flash is sustained and more dangerous than AC.',ir:'EXTREME',controls:'Cover panels with opaque material or work early morning/late evening. Use only 1000VDC rated tools. Never break DC circuit under load. Check polarity before connecting strings. Wear arc flash PPE throughout DC work.',rr:'MEDIUM'},
+    {n:5,task:'Inverter installation and AC connection',hazards:'Electric shock from AC supply, incorrect grid connection, back-feed',ir:'HIGH',controls:'LOTO on AC supply circuit. Install compliant AC isolator adjacent to inverter. Confirm anti-islanding protection is operational. Notify network operator prior to energisation.',rr:'LOW'},
+    {n:6,task:'System commissioning and testing',hazards:'Incorrect operation causing overload, fault, or grid non-compliance',ir:'HIGH',controls:'Commission per AS/NZS 4777.1. Check all DC and AC voltages before energising. Test earth continuity. Verify generation monitoring. Complete CEC commissioning checklist. Provide client with handover documentation.',rr:'LOW'},
+   ]},
+  {ref:'011',name:'EV Charger (EVSE) Installation',cat:'Specialist electrical',
+   ppe:['Safety glasses','Insulated gloves (1000V)','Steel-capped boots','Hi-vis vest','Hard hat','P2 dust mask (drilling)','Hearing protection (drilling)'],
+   legislation:['AS/NZS 3000:2018 Wiring Rules','AS/NZS 61851.1:2023 EV conductive charging systems','IEC 62196 Plugs and connectors for EV charging','Network operator requirements for DNSP approval'],
+   steps:[
+    {n:1,task:'Site assessment — switchboard, supply capacity and location',hazards:'Insufficient supply capacity causing overload, incorrect charger type',ir:'MEDIUM',controls:'Assess existing switchboard load and available capacity. Check main fuse/service fuse rating. Confirm DNSP approval requirements for chargers >5kW. Select installation location — protected from vehicle impact, weather rated.',rr:'LOW'},
+    {n:2,task:'Isolation of switchboard supply',hazards:'Electric shock during circuit installation at switchboard',ir:'HIGH',controls:'LOTO on main switch. Test all busbars for de-energisation. Wear insulated gloves. Maintain arc flash PPE until panel is closed.',rr:'LOW'},
+    {n:3,task:'Cable installation — switchboard to EVSE location',hazards:'Manual handling, drilling through walls/floors, contact with existing services',ir:'MEDIUM',controls:'Use service locator before drilling. Wear P2 mask when drilling masonry. Cable sized per AS/NZS 3000 for continuous load. Protect cable from mechanical damage.',rr:'LOW'},
+    {n:4,task:'EVSE mounting and wiring',hazards:'Incorrect connection causing shock, fire or vehicle damage',ir:'HIGH',controls:'Follow manufacturer installation instructions. Confirm correct polarity and earth connection. Torque all terminals to specification. Dedicated circuit with MCB and RCD (Type A minimum). IP rating appropriate for location.',rr:'LOW'},
+    {n:5,task:'Testing and commissioning',hazards:'Faulty installation causing electric shock to EV user',ir:'HIGH',controls:'Earth continuity, insulation resistance and polarity tests. Confirm RCD operation. Test EVSE with compatible vehicle or test plug. Issue Electrical Safety Certificate.',rr:'LOW'},
+   ]},
+  {ref:'012',name:'Electrical Demolition & Strip Out',cat:'Core electrical',
+   ppe:['Safety glasses/goggles','Steel-capped boots','Hard hat','Hi-vis vest','Heavy-duty leather gloves','P2 dust mask','Hearing protection','Insulated gloves','Disposable coveralls (asbestos areas)'],
+   legislation:['Code of Practice: How to Safely Remove Asbestos (Safe Work NSW)','Code of Practice: Construction Work','AS/NZS 3000:2018 Disconnection requirements','Protection of the Environment Operations Act 1997'],
+   steps:[
+    {n:1,task:'Pre-demolition survey — services and hazardous materials',hazards:'Asbestos, lead paint, unknown live services, structural instability',ir:'EXTREME',controls:'Obtain building age and history. Pre-demolition survey for asbestos — pre-2004 buildings assumed to contain ACM until tested. Identify all electrical, gas, water and comms services. Check structural elements before removing supports.',rr:'MEDIUM'},
+    {n:2,task:'Isolation and de-energisation of all electrical services',hazards:'Electric shock from live circuits during demolition',ir:'EXTREME',controls:'Isolate at switchboard and apply LOTO to ALL circuits in affected area. Test every cable encountered with voltage tester before cutting. Treat every cable as live without testing. Supply authority disconnection required before demolishing metering.',rr:'MEDIUM'},
+    {n:3,task:'Removal of fixtures, fittings and accessories',hazards:'Electric shock, sharp edges, falling objects, manual handling',ir:'HIGH',controls:'Confirm circuit de-energised before removing any fitting. Cap all exposed conductors immediately after removal. Wear heavy gloves — sharp metal edges. Support heavy fixtures during removal.',rr:'LOW'},
+    {n:4,task:'Cable removal — pulling out or cutting in place',hazards:'Residual energisation, unknown circuits, cable entanglement',ir:'HIGH',controls:'Test every cable before cutting. Use insulated cable cutters. Cut one conductor at a time. Tape off cut ends. Do not pull cables through walls blindly.',rr:'LOW'},
+    {n:5,task:'Waste management and site clean-up',hazards:'Cuts from wire offcuts, illegal dumping of electrical waste',ir:'MEDIUM',controls:'Separate electrical waste — cable, fittings, fluorescent lamps disposed per council requirements. Do not mix asbestos material with general waste. Collect all wire offcuts.',rr:'LOW'},
+   ]},
+  {ref:'013',name:'Electrical Fault Finding & Diagnostics',cat:'Core electrical',
+   ppe:['Insulated gloves (1000V)','Safety glasses','Steel-capped boots','Arc flash rated PPE (live work)','Face shield (switchboard diagnostics)','Hi-vis vest'],
+   legislation:['AS/NZS 4836 Safe working on or near low voltage installations','Code of Practice: Managing Electrical Risks','AS/NZS 3000:2018 Testing requirements'],
+   steps:[
+    {n:1,task:'Client consultation and fault identification',hazards:'Incomplete information leading to incorrect diagnosis',ir:'MEDIUM',controls:'Gather full fault description. Ask about previous repair attempts. Check switchboard for tripped RCDs or MCBs. Do not reset any protection device without understanding why it tripped.',rr:'LOW'},
+    {n:2,task:'Visual inspection — non-invasive',hazards:'Contact with exposed or damaged conductors during inspection',ir:'HIGH',controls:'Do not touch any exposed conductors. Use torch to inspect visually. Use non-contact voltage tester to identify live conductors before approaching. Note all findings before proceeding.',rr:'LOW'},
+    {n:3,task:'Live testing and measurement',hazards:'Electric shock from live conductors, arc flash, test lead failure',ir:'HIGH',controls:'Use only CAT III or CAT IV rated test instruments. Inspect test leads before use. One hand rule — keep one hand behind back when probing live circuits. Wear insulated gloves and face shield at switchboard. Do not work alone.',rr:'MEDIUM'},
+    {n:4,task:'Circuit isolation for invasive testing',hazards:'Inadvertent re-energisation during testing',ir:'HIGH',controls:'LOTO on circuit under test. Warn occupants before isolating. Disconnect sensitive equipment before performing insulation resistance tests — high voltage will damage electronics.',rr:'LOW'},
+    {n:5,task:'Repair or make-safe and re-energisation',hazards:'Incomplete repair, fault not fully resolved',ir:'HIGH',controls:'Repair all identified faults before re-energising. Visual inspection of all work. Test insulation resistance and continuity after repair. Confirm protection devices are correctly rated. Issue Electrical Safety Certificate where required.',rr:'LOW'},
+   ]},
+  {ref:'014',name:'Working in Occupied Premises & Around the Public',cat:'People & environment',
+   ppe:['Steel-capped boots','Safety glasses','Hi-vis vest','Insulated gloves','P2 dust mask (drilling)','Hearing protection','Clean work clothing'],
+   legislation:['WHS Act 2011 (NSW) — Duty to others','Privacy Act 1988 (Cth)','Australian Consumer Law','NSW Residential Tenancies Act 2010'],
+   steps:[
+    {n:1,task:'Pre-work communication with occupants',hazards:'Unannounced work causing distress, unauthorised access',ir:'MEDIUM',controls:'Confirm appointment time. Identify yourself and company on arrival. Explain scope of work and any disruptions. Identify vulnerable persons. Obtain access permission before entering any area.',rr:'LOW'},
+    {n:2,task:'Setting up work area — exclusion and protection',hazards:'Members of public entering work zone, trip hazards, property damage',ir:'MEDIUM',controls:'Use drop sheets to protect flooring. Establish clear work zone boundaries. Keep tools organised. Never leave live conductors or open pits unattended. Lock or secure work area when leaving temporarily.',rr:'LOW'},
+    {n:3,task:'Power isolation — communication and management',hazards:'Occupants unaware of isolation affecting medical equipment, security, fridges',ir:'HIGH',controls:'Ask before isolating — check for medical equipment on mains power. If life-sustaining equipment present, do not isolate without alternative power arranged. Warn about security alarm systems. Minimise isolation time.',rr:'LOW'},
+    {n:4,task:'Working with dust, noise and debris in occupied spaces',hazards:'Dust and debris causing health issues, noise causing distress',ir:'MEDIUM',controls:'Use dust sheets and vacuum debris immediately. Close doors to contain dust. Work within agreed hours. Clean up progressively. Do not use client\'s bins for large volumes of waste.',rr:'LOW'},
+    {n:5,task:'Children, pets and vulnerable persons on site',hazards:'Children accessing tools, open switchboards, or live conductors; pets interfering with work',ir:'HIGH',controls:'Request children and pets are kept away from work area. Never leave open switchboards, tool bags, or live conductors unattended where children may access. Close all penetrations at end of each day.',rr:'LOW'},
+    {n:6,task:'Site reinstatement and client sign-off',hazards:'Incomplete reinstatement, unreported property damage',ir:'LOW',controls:'Clean all work areas before leaving. Reinstate all furniture and fittings. Walk through completed work with client. Point out any pre-existing damage noted on arrival. Obtain client sign-off.',rr:'LOW'},
+   ]},
+  {ref:'015',name:'Working in Wet or Damp Conditions',cat:'Environmental',
+   ppe:['Insulated gloves (1000V — waterproof outer)','Safety glasses','Steel-capped waterproof boots','Hi-vis wet weather gear','Hard hat','Rubber-soled non-conductive footwear','Waterproof tool bag'],
+   legislation:['AS/NZS 3000:2018 Wiring in wet/damp locations','AS/NZS 3012:2019 Wet area requirements','Code of Practice: Managing Electrical Risks'],
+   steps:[
+    {n:1,task:'Pre-work assessment — determining if conditions are safe to proceed',hazards:'Water dramatically reduces body resistance — fatal shock can occur at voltages that would otherwise be survivable',ir:'EXTREME',controls:'Assess whether work can be deferred. No live electrical work in rain or where surfaces/equipment are wet. Confirm all circuits in work area are RCD protected. Check weather forecast. Do not commence outdoor work if storms forecast.',rr:'MEDIUM'},
+    {n:2,task:'Preparation of work area — water exclusion and drainage',hazards:'Standing water in work area, water ingress to switchboards or equipment',ir:'HIGH',controls:'Remove standing water before commencing. Use pumps or squeegees to clear work area. Ensure adequate drainage away from work zone. Cover switchboards and open electrical equipment if rain is possible. Never work in flooded areas.',rr:'MEDIUM'},
+    {n:3,task:'Working on circuits in wet/damp locations',hazards:'Electric shock from reduced insulation resistance in damp conditions',ir:'EXTREME',controls:'LOTO all circuits before any work. Test insulation resistance — damp conditions significantly reduce IR values. Do not energise circuits with IR below minimum AS/NZS 3000 values. All wet area circuits must have RCD protection.',rr:'MEDIUM'},
+    {n:4,task:'Use of power tools and test equipment in wet conditions',hazards:'Electrocution from water ingress to non-IP-rated tools',ir:'HIGH',controls:'Use only tools with IP rating appropriate to conditions (IP44 minimum in rain). Inspect tools for damage before use. Use GFCI/RCD protected outlets for all portable tools. Do not use non-IP-rated extension leads outdoors in rain.',rr:'LOW'},
+    {n:5,task:'Roof space and subfloor work in damp conditions',hazards:'Slippery surfaces, mould/fungi inhalation, water-damaged structural elements',ir:'HIGH',controls:'Do not enter roof space during or immediately after rain. Inspect subfloor for drainage and stability. Wear P2 mask where mould is visible. Check for damaged structural members before loading.',rr:'LOW'},
+    {n:6,task:'Lightning risk management',hazards:'Lightning strike — direct or through connected infrastructure',ir:'EXTREME',controls:'Cease all outdoor and roof work if lightning is within 10km (thunder audible). Seek shelter in building or hard-top vehicle. Do not resume for 30 minutes after last thunder. Check BOM before commencing outdoor work.',rr:'LOW'},
+   ]},
+  {ref:'016',name:'Confined Spaces — Subfloors, Ceiling Spaces & Tanks',cat:'Confined spaces',
+   ppe:['Hard hat','Safety glasses','Steel-capped boots','Hi-vis vest','P2 dust mask','Nitrile gloves','Coveralls (disposable)','4-gas monitor (O2, CO, H2S, LEL)','Torch/head lamp','Two-way radio or phone'],
+   legislation:['Code of Practice: Confined Spaces (Safe Work NSW)','AS 2865:2009 Confined spaces','WHS Regulation 2017 (NSW) Part 4.3 Confined spaces'],
+   steps:[
+    {n:1,task:'Identify and classify the space',hazards:'Incorrectly classifying a confined space — proceeding without appropriate controls',ir:'EXTREME',controls:'A confined space is any enclosed or partially enclosed space not designed for continuous human occupancy that has restricted entry/exit and may have an atmosphere hazard. Subfloors, roof spaces, large tanks, and pits may all qualify. If in doubt — treat as a confined space.',rr:'MEDIUM'},
+    {n:2,task:'Atmospheric testing before entry',hazards:'Oxygen deficiency, toxic gases (CO, H2S), flammable atmosphere — all potentially fatal',ir:'EXTREME',controls:'Test atmosphere at entry point and within space using calibrated 4-gas monitor. Safe entry conditions: O2 19.5–23.5%, CO <25ppm, H2S <10ppm, LEL <5%. If any reading outside safe range — do not enter. Ventilate and retest. Monitor continuously.',rr:'MEDIUM'},
+    {n:3,task:'Entry permit and standby person',hazards:'Entrapment or incapacitation with no person available to initiate rescue',ir:'EXTREME',controls:'Complete confined space entry permit before entry. Designate standby person who remains outside at all times. Standby person maintains communication with entrant and has emergency plan ready. Rescue equipment at entry point.',rr:'MEDIUM'},
+    {n:4,task:'Working in subfloor',hazards:'Live services, vermin (snakes, spiders), sharp objects, heat in summer',ir:'HIGH',controls:'Confirm all circuits isolated with LOTO. Test all cables before touching. Use long tool to probe area before inserting hands. Wear coveralls and gloves. Carry snake bite kit. Do not enter subfloor during or after rain.',rr:'LOW'},
+    {n:5,task:'Working in roof/ceiling space',hazards:'Heat stress, falls through ceiling, insulation irritants, vermin',ir:'HIGH',controls:'Do not enter roof space above 35°C. Step on joists only. Wear P2 mask. Have standby person aware of location. Confirm all circuits isolated before handling wiring. Use torch/headlamp.',rr:'LOW'},
+    {n:6,task:'Emergency and rescue plan',hazards:'Incapacitated worker unable to self-rescue',ir:'HIGH',controls:'Rescue plan documented on entry permit before entry commences. Standby person knows how to call 000. Retrieval line attached to harness where space permits. Do not attempt lone rescue — call 000.',rr:'LOW'},
+   ]},
+  {ref:'017',name:'Asbestos Awareness — Identification & Stop Work',cat:'Hazardous materials',
+   ppe:['P2 disposable respirator (minimum)','Disposable coveralls (Type 5/6)','Nitrile gloves (two pairs)','Safety glasses/goggles','Steel-capped boots with disposable covers','Plastic sheeting','Sealed waste bags (labelled)'],
+   legislation:['Code of Practice: How to Safely Remove Asbestos (Safe Work NSW)','Code of Practice: Management and Control of Asbestos in Workplaces','WHS Regulation 2017 (NSW) Part 8.1–8.10 Asbestos'],
+   steps:[
+    {n:1,task:'Pre-work asbestos assessment',hazards:'Disturbing asbestos-containing materials (ACM) without identification — causing fibre release',ir:'EXTREME',controls:'Assume asbestos is present in ALL buildings constructed or renovated before 1990 (high risk) and 1990–2003 (moderate risk). Check asbestos register if available. If no register and building is pre-2003, treat as ACM present. Do not disturb suspect material until assessed.',rr:'MEDIUM'},
+    {n:2,task:'Identifying suspected ACM — visual inspection',hazards:'Misidentifying ACM as non-hazardous material and disturbing it',ir:'EXTREME',controls:'Common ACM locations: meter box backing boards, switchboard linings, ceiling and wall sheeting (fibro), corrugated roofing, eaves lining, floor tiles, pipe lagging. If in doubt — STOP. Do not attempt to identify by touch or breaking. Only accredited assessor can confirm by sampling.',rr:'MEDIUM'},
+    {n:3,task:'Stop work — suspected ACM encountered',hazards:'Continuing work and causing fibre release / worker exposure',ir:'EXTREME',controls:'STOP all work immediately if ACM is suspected. Do not attempt to clean up or remove. Secure area. Notify Aaron Aitken immediately. Notify client/property owner. Do not resume until ACM is assessed by accredited assessor.',rr:'LOW'},
+    {n:4,task:'Working near intact, non-friable ACM (if approved)',hazards:'Accidental disturbance of ACM causing fibre release',ir:'HIGH',controls:'Only proceed if risk assessment confirms ACM is intact and non-friable and work will not disturb it. Wear P2 respirator. Do not drill, cut, sand, or impact ACM. Wet wipe (never dry sweep) any surface near ACM.',rr:'MEDIUM'},
+    {n:5,task:'Decontamination after potential ACM exposure',hazards:'Spreading fibres on clothing, skin, or equipment',ir:'HIGH',controls:'Remove disposable coveralls inside-out. Seal in plastic bag. Remove respirator last. Wet wipe exposed skin and hair. Bag all PPE as asbestos waste. Do not take potentially contaminated clothing home. Shower as soon as practicable.',rr:'LOW'},
+    {n:6,task:'Asbestos waste disposal',hazards:'Illegal disposal of asbestos waste, environmental contamination',ir:'HIGH',controls:'All ACM waste must be double-bagged in 200-micron poly bags labelled with asbestos warning symbol. Transport to approved facility only. Do not place in general waste or skip bins. Record disposal — retain receipt.',rr:'LOW'},
+   ]},
+  {ref:'018',name:'Working Alone & Remote Work',cat:'People & environment',
+   ppe:['Steel-capped boots','Safety glasses','Hi-vis vest','Insulated gloves','Fully charged mobile phone','First aid kit (vehicle)','Snake bite kit (regional sites)','Adequate water (minimum 2L)'],
+   legislation:['WHS Act 2011 (NSW) — Duty of care to workers','Code of Practice: Managing the Work Environment and Facilities'],
+   steps:[
+    {n:1,task:'Pre-work check-in and communication plan',hazards:'Incapacitation with no person aware of location or expected return time',ir:'HIGH',controls:'Notify Aaron Aitken of: job address, nature of work, estimated duration, and check-in schedule. Agree on check-in time and action if missed. Do not work alone at night in isolated locations.',rr:'LOW'},
+    {n:2,task:'Communication — confirming mobile coverage',hazards:'No mobile coverage at remote site — unable to call for help',ir:'HIGH',controls:'Check mobile coverage before commencing isolated work. On the NSW south coast, coverage gaps exist in rural areas. If no coverage, use satellite communicator or agree on a drive-out check-in point.',rr:'LOW'},
+    {n:3,task:'Hazard assessment — tasks suitable for solo work',hazards:'Performing high-risk tasks alone with no person to assist in emergency',ir:'HIGH',controls:'Must NOT be performed alone: confined space entry, live electrical work above 50V AC, work at heights >2m without passive fall protection, pole climbing. Solo workers may perform: testing and tagging, fault finding (isolated circuits), smoke alarm installation.',rr:'LOW'},
+    {n:4,task:'Vehicle and travel to remote sites',hazards:'Vehicle breakdown in remote area, driving fatigue, wildlife on roads',ir:'MEDIUM',controls:'Pre-trip vehicle check (fuel, tyres, water, lights). Carry basic recovery gear and water. No more than 2 hours driving without a break. Be alert for wildlife at dawn and dusk. Advise contact of travel route for remote sites.',rr:'LOW'},
+    {n:5,task:'Medical emergency when working alone',hazards:'Electric shock, snake bite, heart attack, fall — no one to assist',ir:'HIGH',controls:'Know location of nearest hospital (Moruya District: (02) 4474 1888). Carry charged phone on person at all times — not in tool bag. Triple Zero (000) works on any network. Snake bite kit in vehicle — immobilise and call 000.',rr:'LOW'},
+   ]},
+  {ref:'019',name:'Hot Work — Heat Guns, Angle Grinders & Open Flame',cat:'Hot work & fire',
+   ppe:['Face shield (grinding)','Safety glasses','Steel-capped boots','Hi-vis vest','Leather welding gloves','Fire-resistant clothing (no synthetics near grinding)','Hearing protection','P2 dust mask (grinding)','CO2 or dry powder fire extinguisher on site'],
+   legislation:['Code of Practice: Construction Work (Safe Work NSW)','AS 1715 Respiratory protective equipment','NSW Rural Fire Service — fire danger period requirements'],
+   steps:[
+    {n:1,task:'Pre-work fire risk assessment',hazards:'Igniting combustible materials, fire spreading in occupied building or bushland',ir:'HIGH',controls:'Check NSW RFS fire danger rating and Total Fire Ban status before any hot work. No grinding or heat gun work on Total Fire Ban days without written exemption. Remove or protect all combustibles within 3m. Confirm fire extinguisher present and accessible.',rr:'LOW'},
+    {n:2,task:'Angle grinder operation',hazards:'Disc failure causing fragment projection, sparks igniting materials, hand-arm vibration',ir:'HIGH',controls:'Inspect disc before fitting — no cracks or damage. Correct disc for material and grinder speed. Guard fitted at all times. Two-hand grip. Clear all persons from spark trajectory (up to 8m). Wear face shield over safety glasses.',rr:'LOW'},
+    {n:3,task:'Heat gun / heat shrink application',hazards:'Burns to skin or surfaces, igniting nearby combustibles',ir:'MEDIUM',controls:'Keep heat gun moving. Keep away from flammable materials. Allow to cool before placing down. Never leave heat gun unattended while hot. Use appropriate temperature setting.',rr:'LOW'},
+    {n:4,task:'Post-hot-work fire watch',hazards:'Smouldering materials igniting after work is complete — delayed fire start',ir:'HIGH',controls:'Remain on site for minimum 30 minutes after all hot work. Inspect all areas where sparks or heat may have contacted. Feel wall cavities for heat. Wet down surrounding area where practical outdoors.',rr:'LOW'},
+    {n:5,task:'Fire response',hazards:'Small fire escalating beyond control',ir:'HIGH',controls:'Use fire extinguisher on small contained fires only. If fire cannot be controlled within 30 seconds — evacuate all persons, call 000. Do not re-enter building. In bushland — if fire escapes call 000 and NSW RFS immediately.',rr:'LOW'},
+   ]},
+  {ref:'020',name:'Hazardous Manual Tasks — Lifting, Carrying & Repetitive Work',cat:'People & environment',
+   ppe:['Steel-capped boots','Safety glasses','Hi-vis vest','Cut-resistant gloves (cable drums, sheet metal)','Knee pads (prolonged kneeling)'],
+   legislation:['Code of Practice: Hazardous Manual Tasks (Safe Work NSW)','WHS Regulation 2017 (NSW) Part 4.2 Hazardous manual tasks'],
+   steps:[
+    {n:1,task:'Pre-task planning and load assessment',hazards:'Musculoskeletal injury from underestimating load weight or distance',ir:'MEDIUM',controls:'Assess load before lifting: weight, size, grip points, carrying distance, obstacles. Maximum single-person lift: 16kg. 17–25kg requires assessment. >25kg always two persons or mechanical aid. Plan path before lifting.',rr:'LOW'},
+    {n:2,task:'Safe lifting technique',hazards:'Back strain, disc injury from incorrect lifting posture',ir:'MEDIUM',controls:'Feet shoulder-width apart, close to load. Bend at knees — not waist. Straight back. Firm grip. Lift with legs — keep load close to body. No twisting while lifting. Avoid lifting from below knee or above shoulder height.',rr:'LOW'},
+    {n:3,task:'Carrying cable drums, conduit, and heavy equipment',hazards:'Crush injury if drum rolls or tips, laceration from cable ends, back strain',ir:'HIGH',controls:'Use cable drum stand. Two-person carry for drums over 25kg. Use trolley or hand truck where possible. Carry conduit horizontally with support at multiple points. Wear cut-resistant gloves when handling cable ends.',rr:'LOW'},
+    {n:4,task:'Repetitive tasks — cable pulling, drilling, screwdriving',hazards:'Repetitive strain injury (RSI), tendinopathy, carpal tunnel',ir:'MEDIUM',controls:'Rotate tasks between workers where possible. Take regular breaks — minimum 5 minutes every 30 minutes of repetitive work. Use power tools to reduce manual effort. Vary posture regularly. Report early signs of discomfort.',rr:'LOW'},
+    {n:5,task:'Working in awkward positions — roof space, subfloor, trenches',hazards:'Musculoskeletal injury from sustained awkward posture',ir:'HIGH',controls:'Limit time in sustained awkward postures — rotate workers. Use knee pads for prolonged kneeling. Pre-assemble components at ground level before installation in confined space. If posture is causing pain — stop and reassess.',rr:'LOW'},
+   ]},
+  {ref:'021',name:'Use of Power Tools & Angle Grinders',cat:'Tools & equipment',
+   ppe:['Safety glasses (minimum)','Face shield (angle grinder — mandatory)','Hearing protection','Steel-capped boots','Hi-vis vest','Leather or cut-resistant gloves','P2 dust mask (masonry drilling/grinding)'],
+   legislation:['AS/NZS 60745 Hand-held motor operated electric tools','Code of Practice: Construction Work (Safe Work NSW)'],
+   steps:[
+    {n:1,task:'Pre-use inspection of power tools',hazards:'Use of damaged tool causing injury, electrocution from damaged cord',ir:'HIGH',controls:'Inspect all power tools before each use: check cord, plug, guard, switch. Check current test & tag — do not use tools with expired or missing tag. Remove from service and tag OUT OF SERVICE if defective.',rr:'LOW'},
+    {n:2,task:'Setting up and securing workpiece',hazards:'Workpiece moving during cutting/drilling causing loss of control',ir:'HIGH',controls:'Secure workpiece with clamps or vice — never hold with free hand near cutting path. Stable working platform. Clear area of bystanders. Tool not running when making adjustments. Disconnect from power before changing bits.',rr:'LOW'},
+    {n:3,task:'Angle grinder — cutting and grinding operations',hazards:'Disc burst, kickback, sparks, noise-induced hearing loss, vibration',ir:'HIGH',controls:'Use correct disc for material and operation. Check disc RPM rating matches grinder speed. Guard in correct position. Two-hand grip at all times. Do not use cutting discs for side grinding.',rr:'LOW'},
+    {n:4,task:'Drilling — masonry, timber and metal',hazards:'Contact with hidden services, bit breakage, drill snatching in metal',ir:'HIGH',controls:'Use cable/pipe detector before drilling into walls, floors, or ceilings. Correct bit for material. Reduce speed when drill is about to break through. SDS hammer drills: ensure bit is fully locked. Wear P2 mask when drilling masonry.',rr:'LOW'},
+    {n:5,task:'Extension leads and power supply for tools',hazards:'Overloaded extension lead, damaged lead, tripping hazard',ir:'MEDIUM',controls:'Use only leads in good condition with current test & tag. Fully unroll leads before use. Correct lead rating for tool load. Use RCD-protected outlet for all tools on site. Route leads to prevent tripping.',rr:'LOW'},
+    {n:6,task:'Tool storage and transport',hazards:'Damaged tools from improper storage, injury from unsecured tools in vehicle',ir:'LOW',controls:'Store tools in cases or dedicated drawers. Secure all tools in vehicle before moving. Blade guards on all saw blades during storage. Keep tools dry.',rr:'LOW'},
+   ]},
+  {ref:'022',name:'Working in Extreme Heat',cat:'Environmental',
+   ppe:['Broad-brim hat (minimum 7.5cm brim)','SPF50+ sunscreen (reapply every 2hrs)','Lightweight hi-vis long-sleeve shirt','UV-rated safety glasses','Steel-capped boots','Cooling vest or neck towel','Minimum 1L water per hour available'],
+   legislation:['Code of Practice: Managing the Work Environment and Facilities','Safe Work Australia — Heat Stress guidance','Bureau of Meteorology — Heat Health Alert system'],
+   steps:[
+    {n:1,task:'Pre-work heat assessment and planning',hazards:'Heat stroke, heat exhaustion, sunburn, dehydration — escalate rapidly in NSW summer',ir:'HIGH',controls:'Check BOM forecast before commencing outdoor or confined space work. If temperature exceeds 35°C, reassess scheduling — shift work to early morning or late afternoon. If exceeds 38°C with high humidity, strongly consider rescheduling. No work in roof space above 35°C.',rr:'LOW'},
+    {n:2,task:'Hydration management',hazards:'Dehydration leading to heat exhaustion',ir:'HIGH',controls:'Drink minimum 1 litre of water per hour in hot conditions — do not wait until thirsty. Cool water preferred. Avoid caffeine and alcohol. Pre-hydrate before starting. Urine colour check — pale yellow is adequate.',rr:'LOW'},
+    {n:3,task:'Scheduling and work/rest cycles',hazards:'Heat stress accumulation from continuous physical work',ir:'HIGH',controls:'Plan heavy physical work for coolest part of day (before 10am and after 3pm on hot days). Rest in shade or cool vehicle for minimum 10 minutes every 45 minutes of outdoor work. Rotate workers through hot tasks.',rr:'LOW'},
+    {n:4,task:'Sun protection',hazards:'Sunburn, heat radiation, long-term skin cancer risk',ir:'HIGH',controls:'Apply SPF50+ sunscreen 20 minutes before going outdoors — reapply every 2 hours or after sweating. Broad-brim hat mandatory for all outdoor work. UV-rated safety glasses. Lightweight long-sleeve hi-vis shirt.',rr:'LOW'},
+    {n:5,task:'Recognising and responding to heat illness',hazards:'Failure to identify heat exhaustion before it progresses to heat stroke — potentially fatal',ir:'HIGH',controls:'Heat exhaustion signs: heavy sweating, weakness, pale/clammy skin, nausea, headache, dizziness. Action: cool area, lie down, apply cold wet cloths, give water if conscious. Heat stroke: hot dry skin, confusion, rapid pulse. CALL 000 IMMEDIATELY. Cool rapidly while awaiting ambulance.',rr:'LOW'},
+   ]},
+  {ref:'023',name:'Traffic Management — Working Near Roads & Driveways',cat:'Environmental',
+   ppe:['Class D hi-vis vest or shirt (minimum for roadside work)','Hard hat','Steel-capped boots','Safety glasses','Insulated gloves','Sun protection','Two-way radio (where spotter required)'],
+   legislation:['AS 1742.3 Manual of uniform traffic control devices','Transport for NSW — Traffic Control at Work Sites','NSW Roads Act 1993 — Road opening permit requirements'],
+   steps:[
+    {n:1,task:'Pre-work assessment and permit requirements',hazards:'Working on public roads without appropriate approvals',ir:'HIGH',controls:'Determine if work is on public road, footpath, or private driveway. Public road work requires road opening permit from local council or Transport for NSW. Traffic control plan (TCP) required. Engage RMS-accredited traffic controller where required.',rr:'LOW'},
+    {n:2,task:'Setting up traffic control and exclusion zone',hazards:'Vehicles entering work zone, workers struck by passing traffic',ir:'EXTREME',controls:'Set up signage, cones, and barriers per approved TCP before commencing. Minimum exclusion zone: work zone + 1m buffer each side. On high-speed roads (>60km/h) additional advance warning required. Spotter required where vehicles pass within 3m of workers.',rr:'MEDIUM'},
+    {n:3,task:'Working in driveways and private property near traffic',hazards:'Vehicles reversing into work zone',ir:'HIGH',controls:'Park work vehicle to create physical barrier between workers and road where possible. Cone off work area. Notify occupants that vehicle access may be restricted. Use spotter for reversing vehicles near work area.',rr:'LOW'},
+    {n:4,task:'Underground work near roads — trenching and pit work',hazards:'Trench collapse from traffic vibration, vehicles driving over unmarked trench',ir:'HIGH',controls:'Appropriate shoring for all trenches near roadway. Barricade and cover open trenches when unattended — steel plates rated for vehicle load if within traffic path. Reinstate surface to trafficable condition at end of each day.',rr:'LOW'},
+    {n:5,task:'Night and low-visibility work near roads',hazards:'Reduced visibility — workers and hazards not seen by drivers',ir:'EXTREME',controls:'Class D hi-vis mandatory. Use lighting to illuminate work zone. Retro-reflective cones and signs. If lighting is inadequate to safely complete work — defer to daylight hours.',rr:'MEDIUM'},
+    {n:6,task:'Site reinstatement and traffic control removal',hazards:'Leaving road surface in dangerous condition',ir:'MEDIUM',controls:'Reinstate road surface to at least temporary trafficable standard before removing traffic control. Remove traffic control in correct order — remove from farthest point first. Inspect road surface before opening to traffic. Notify council of completion.',rr:'LOW'},
+   ]},
+  {ref:'024',name:'Caravan Park & Temporary Accommodation Site Electrical Work',cat:'Specialist electrical',
+   ppe:['Safety glasses','Insulated gloves (1000V)','Steel-capped boots','Hi-vis vest','Hard hat','P2 dust mask','Waterproof outer layer (coastal weather)'],
+   legislation:['AS/NZS 3001.1:2022 Electrical installations in caravans and caravan parks','AS/NZS 3000:2018 Section 4','NSW Local Government Act — caravan park licensing requirements'],
+   steps:[
+    {n:1,task:'Site assessment and coordination with park management',hazards:'Unknown existing wiring condition, high occupancy — public at risk',ir:'HIGH',controls:'Liaise with park manager before commencing. Obtain site plan and existing electrical drawings if available. Identify all supply points, sub-boards, and metering. Barricade work areas — high pedestrian traffic including children.',rr:'LOW'},
+    {n:2,task:'Isolation in occupied park environment',hazards:'Inadvertently de-energising life support equipment, refrigeration, or security systems',ir:'HIGH',controls:'Door knock / notify all affected sites before isolation. Check for medical equipment. Allow minimum 15 minutes notice. LOTO all relevant circuits. Post clear signage. Provide estimated restoration time.',rr:'LOW'},
+    {n:3,task:'Caravan site electrical outlet installation or repair',hazards:'Weathered and corroded connections from coastal salt air, aged infrastructure',ir:'HIGH',controls:'Inspect all existing connections before energising repaired circuits — coastal environments accelerate corrosion. Use marine-grade or IP66 rated enclosures. Test insulation resistance before re-energising.',rr:'LOW'},
+    {n:4,task:'RCD and metering installation',hazards:'Inadequate RCD protection putting public at risk',ir:'HIGH',controls:'All caravan park site outlets must have RCD protection per AS/NZS 3001.1. Test all RCDs after installation. Confirm metering accuracy. Label all circuits clearly. Issue compliance certificate.',rr:'LOW'},
+    {n:5,task:'Working near amenities blocks and wet areas',hazards:'Electric shock risk in wet public amenities — high consequence if fault occurs with public present',ir:'EXTREME',controls:'Isolate and barricade amenities block before entering. Place OUT OF SERVICE signs on affected bathrooms. No work on energised circuits in wet areas under any circumstances. Test and inspect all RCDs before returning to service.',rr:'MEDIUM'},
+    {n:6,task:'Reinstatement and testing before reopening to public',hazards:'Leaving unsafe installation accessible to members of the public',ir:'HIGH',controls:'Full inspection and test of all work before removing barricades. Test every RCD. Confirm all enclosures secured. Walk area with park manager before reopening. Issue Electrical Safety Certificate.',rr:'LOW'},
+   ]},
+  {ref:'025',name:'Marine, Wharf & Jetty Electrical Work',cat:'Specialist electrical',
+   ppe:['Insulated gloves (1000V)','Safety glasses','Steel-capped non-slip boots','Hi-vis vest','Life jacket (PFD Type 1 or 2 where fall-into-water risk exists)','Hard hat','Waterproof outer layer','Two-way radio or charged mobile phone'],
+   legislation:['AS/NZS 3000:2018 Section 4.4 Marine environments','AS/NZS 3004.2:2014 Marinas and boats','Maritime Safety NSW — working near water','WHS Regulation 2017 (NSW) — Managing risk of drowning'],
+   steps:[
+    {n:1,task:'Pre-work site assessment — tidal, structural and environmental',hazards:'Tidal changes altering access, unstable wharf/jetty structure, slippery surfaces',ir:'HIGH',controls:'Check tidal schedule — plan work around low tide. Inspect structure for rot, corrosion, loose planking, and stability. Check for marine wildlife. Assess slip hazard on wet timber or steel grating — use non-slip footwear.',rr:'MEDIUM'},
+    {n:2,task:'Drowning risk management',hazards:'Fall into water — risk of drowning, cold water shock, entanglement with structure',ir:'EXTREME',controls:'PFD mandatory where working within 1m of unguarded water edge or over open water. Establish throw rope or life ring at work area. Two-person rule — no solo work over water. Identify nearest safe exit from water. Call 000 if person enters water and does not surface immediately.',rr:'MEDIUM'},
+    {n:3,task:'Isolation in marine environment',hazards:'Electric shock — saltwater dramatically reduces body resistance, greatly increasing shock severity',ir:'EXTREME',controls:'LOTO all circuits before any electrical work near water. Treat ALL conductors as live until tested. Never work on live electrical systems near water — no exceptions. Confirm RCD protection on all circuits. Test shore power outlets for stray current/ESD risk.',rr:'MEDIUM'},
+    {n:4,task:'Cable and conduit installation in marine environment',hazards:'Accelerated corrosion from salt air, UV degradation, tidal submersion',ir:'HIGH',controls:'Use marine-rated cable and conduit. All enclosures rated minimum IP56 for marine exposure. Use stainless steel fixings. Cable routes must avoid tidal submersion unless cable is rated for submersion.',rr:'LOW'},
+    {n:5,task:'Electric shock drowning (ESD) testing',hazards:'AC voltage in water from faulty marina wiring causing ESD — potentially fatal to swimmers',ir:'EXTREME',controls:'Before energising any new or repaired marina supply, test for stray voltage in water using AC voltmeter between water and shore earth. Any reading >0.1V AC requires fault investigation before energisation. Check earth fault loop impedance on all shore power outlets.',rr:'MEDIUM'},
+    {n:6,task:'Working from boats or floating platforms',hazards:'Vessel movement causing falls, capsizing under tool load',ir:'HIGH',controls:'Use stable, appropriately rated vessel. Secure vessel before commencing work. PFD worn at all times. Keep centre of gravity low. No electrical work from a vessel on live systems. Minimise tools and equipment on vessel.',rr:'MEDIUM'},
+   ]},
+  {ref:'026',name:'Agricultural & Rural Property Electrical Work',cat:'Specialist electrical',
+   ppe:['Safety glasses','Insulated gloves (1000V)','Steel-capped boots','Hi-vis vest','Hard hat','Sun protection','Snake bite kit (vehicle first aid)','Two-way radio or satellite communicator','P2 dust mask (grain dust, chemical areas)'],
+   legislation:['AS/NZS 3000:2018 Agricultural installations','Code of Practice: Managing Electrical Risks','Dial Before You Dig — 1100 (rural unregistered services)'],
+   steps:[
+    {n:1,task:'Remote site access and communication planning',hazards:'No mobile coverage, long travel distances from medical help',ir:'HIGH',controls:'Confirm mobile coverage at property. If none, arrange satellite communicator or check-in schedule. Advise Aaron Aitken of property location and expected duration. Identify nearest hospital and ambulance access route.',rr:'LOW'},
+    {n:2,task:'Identification of rural hazards — livestock, machinery, chemicals',hazards:'Livestock causing crush or bite injuries, machinery, chemical storage, vermin',ir:'HIGH',controls:'Do not enter livestock enclosures without owner confirmation animals are secured. Never approach running machinery. Identify chemical storage areas. Check sheds and meter boxes for snakes before reaching in. Wear P2 mask in grain storage areas.',rr:'LOW'},
+    {n:3,task:'Three-phase supply and irrigation pump electrical work',hazards:'Three-phase shock (more severe than single phase), pump restart, aged rural infrastructure',ir:'HIGH',controls:'Wear arc flash PPE for three-phase switchboard work. Confirm correct phase rotation before connecting motors. Notify property owner before isolating irrigation. Do not rely on existing earthing — test before proceeding.',rr:'LOW'},
+    {n:4,task:'Working in farm sheds and outbuildings',hazards:'Bat colonies, bird and vermin nesting, asbestos cement roofing, heat in metal sheds',ir:'HIGH',controls:'Inspect roof space before entry — look for bat colonies. Do not handle bats. Asbestos cement roofing is extremely common in pre-2000 farm buildings — treat all fibro as ACM. Manage heat per AT-SWMS-022.',rr:'LOW'},
+    {n:5,task:'Underground cable installation — rural properties',hazards:'Unregistered and unmapped services common on rural properties, cable damage from machinery',ir:'HIGH',controls:'Dial Before You Dig — however rural properties often have unregistered private services. Ask property owner about known buried cables. Use cable locator before any digging. Bury cables minimum 600mm deep in open areas.',rr:'LOW'},
+    {n:6,task:'Solar, battery storage and off-grid systems on rural properties',hazards:'High DC voltages from large solar arrays, battery bank fire risk, poor existing earthing',ir:'HIGH',controls:'DC voltage from large rural solar systems can exceed 600V — treat as extreme hazard. Cover panels before working on DC circuits. Confirm battery isolation before working on battery bank. Battery storage areas must be ventilated — hydrogen gas risk.',rr:'MEDIUM'},
+   ]},
+  {ref:'027',name:'Aerial Work Platform (EWP / Boom Lift) Operation',cat:'Working at heights',
+   ppe:['Full-body fall arrest harness (mandatory in EWP basket)','Hard hat','Safety glasses','Steel-capped boots','Hi-vis vest','Insulated gloves (electrical work from EWP)','Tool lanyards','Sun protection'],
+   legislation:['AS 2550.10:2006 Cranes, hoists and winches — EWP safe use','AS 1418.10 Elevating work platforms','Code of Practice: Managing the Risk of Falls','High Risk Work Licence — EWP (boom type over 11m) requirement'],
+   steps:[
+    {n:1,task:'Pre-use inspection and licencing check',hazards:'Operating defective EWP or without appropriate licence',ir:'HIGH',controls:'Confirm operator holds current High Risk Work Licence (EWP) for boom-type platforms over 11m. Conduct pre-start inspection per manufacturer checklist. Check current service record. Do not operate EWP with defects — tag OUT OF SERVICE.',rr:'LOW'},
+    {n:2,task:'Ground assessment — surface, overhead hazards, overhead powerlines',hazards:'EWP tipping on uneven ground, contact with overhead powerlines — fatal',ir:'EXTREME',controls:'Assess ground bearing capacity. Identify all overhead powerlines before setting up — maintain minimum 3m exclusion zone. Plan travel path to avoid powerlines. Use spotter when operating near powerlines.',rr:'MEDIUM'},
+    {n:3,task:'Setting up — outriggers and exclusion zone',hazards:'EWP overturning during operation, persons struck by moving platform',ir:'HIGH',controls:'Deploy all outriggers fully on firm, level ground or rated pads. Confirm EWP is level before elevating. Establish exclusion zone around EWP. No persons under elevated platform. Spotter on ground during all elevated operations.',rr:'LOW'},
+    {n:4,task:'Operating at height — elevated work',hazards:'Fall from basket, collision with structure, dropped tools',ir:'HIGH',controls:'Harness attached to rated anchor point in basket at all times — no exceptions. Do not lean over rails or climb on rails. Tool lanyards on all tools. Do not exceed rated basket load. Do not use EWP in wind over 45 km/h.',rr:'LOW'},
+    {n:5,task:'Electrical work from EWP near live services',hazards:'Contact with live conductors from elevated position',ir:'EXTREME',controls:'Use non-conductive (fibreglass) boom EWP where working near live services. Confirm clearance distances from all live services before elevating. Insulated tools only. Harness worn — shock reaction may cause sudden movement.',rr:'MEDIUM'},
+    {n:6,task:'Emergency — person incapacitated in basket',hazards:'Operator incapacitation at height — cannot descend',ir:'HIGH',controls:'Ground operator trained in EWP emergency lowering procedure before work commences. Emergency lowering controls located and tested at ground level before elevating. If controls fail — call 000. Never climb EWP to reach incapacitated operator.',rr:'LOW'},
+   ]},
+  {ref:'028',name:'Swimming Pool & Spa Electrical Installations',cat:'Specialist electrical',
+   ppe:['Insulated gloves (1000V)','Safety glasses','Steel-capped boots','Hi-vis vest','Waterproof outer layer','Non-slip footwear around pool surrounds'],
+   legislation:['AS/NZS 3000:2018 Section 4.7 Swimming pools, fountains and spas','NSW Swimming Pools Act 1992 and Regulation 2018','Code of Practice: Managing Electrical Risks'],
+   steps:[
+    {n:1,task:'Site assessment and zone identification',hazards:'Working in or near pool/spa zones with incorrect classification leading to non-compliant installation',ir:'HIGH',controls:'Identify all AS/NZS 3000 zones: Zone 0 (inside pool), Zone 1 (0–2m from pool edge/2.5m height), Zone 2 (2–3.5m). Electrical equipment in each zone must meet specific IP and installation requirements. No standard GPOs within Zone 1.',rr:'LOW'},
+    {n:2,task:'Isolation of pool/spa electrical supply',hazards:'Electric shock in wet environment — potentially fatal, ESD risk if pool is occupied',ir:'EXTREME',controls:'Confirm pool/spa is not occupied before isolating. LOTO all pool electrical circuits. Test for de-energisation. Check for stray voltage in pool water before anyone re-enters. Any voltage in water = do not re-enter until fault found.',rr:'MEDIUM'},
+    {n:3,task:'Pool light installation or replacement',hazards:'Electric shock drowning — pool light niche flooding, insulation failure in submerged fitting',ir:'EXTREME',controls:'Use only pool-rated luminaires (SAA approved for submerged use). Confirm cable entry into light niche is properly sealed. Supply via SELV transformer only — 12V maximum for in-pool lights. Earth all metallic pool components. RCD protection mandatory.',rr:'MEDIUM'},
+    {n:4,task:'Pump and filtration equipment installation',hazards:'Electric shock from pump motor fault in wet environment',ir:'HIGH',controls:'Pump installed outside Zone 0 and 1 where possible. IP rating appropriate to location. Dedicated circuit with RCD protection. Earth continuity between pump body and main earth. Confirm pump rotation direction before sealing connections.',rr:'LOW'},
+    {n:5,task:'Equipotential bonding',hazards:'Voltage differences between metallic pool components causing electric shock to swimmers',ir:'EXTREME',controls:'Equipotential bonding of ALL metallic pool components is mandatory per AS/NZS 3000 — pool shell reinforcement, ladders, handrails, pump housings, light niches, water features. Use minimum 4mm2 copper bonding conductors. Test continuity of all bonding connections.',rr:'LOW'},
+    {n:6,task:'Commissioning and ESD testing',hazards:'Returning pool to service with undetected fault causing ESD',ir:'EXTREME',controls:'Before returning pool to service: test AC voltage between pool water and earth — must read zero. Test all RCDs. Test earth fault loop impedance. Confirm equipotential bonding continuity. Issue Electrical Safety Certificate. Recommend annual RCD testing.',rr:'LOW'},
+   ]},
+  {ref:'029',name:'Electrical Work in Residential Aged Care & NDIS Client Homes',cat:'People & environment',
+   ppe:['Safety glasses','Steel-capped boots','Hi-vis vest (external areas)','Insulated gloves','Clean work clothing','P2 dust mask (drilling)','Hearing protection'],
+   legislation:['Aged Care Act 1997 (Cth)','NDIS Practice Standards — safe environment','Privacy Act 1988 (Cth)','WHS Act 2011 (NSW) — Duty to others','AS/NZS 3003:2011 Patient areas'],
+   steps:[
+    {n:1,task:'Pre-work coordination with facility/support coordinator',hazards:'Disrupting care routines, distressing vulnerable residents, accessing areas without clearance',ir:'HIGH',controls:'Contact facility manager or NDIS support coordinator before arrival. Confirm appointment, scope, and resident-specific requirements. Obtain access clearance. Identify residents who must not be disturbed. Confirm medical equipment on mains power before any isolation.',rr:'LOW'},
+    {n:2,task:'Working around residents and clients with cognitive impairment',hazards:'Resident entering work zone, handling tools or exposed wiring, unpredictable behaviour',ir:'HIGH',controls:'Never leave tools, open switchboards, or exposed wiring unattended where residents have access. Close and secure work area when leaving. Brief facility staff on work being done. Work during low-activity periods where possible.',rr:'LOW'},
+    {n:3,task:'Isolation — medical and life support equipment',hazards:'Isolating supply to medical equipment — oxygen concentrators, hospital beds, CPAP, powered wheelchairs',ir:'EXTREME',controls:'Obtain complete list of all mains-powered medical equipment before any isolation. Coordinate with nursing staff — medical staff must be present and confirm alternative arrangements before any supply to medical equipment is interrupted. Minimise isolation duration.',rr:'MEDIUM'},
+    {n:4,task:'Minimising noise and dust near residents',hazards:'Loud noise causing distress or medical episode, dust affecting respiratory conditions',ir:'MEDIUM',controls:'Advise facility of noisy work periods. Use dust sheets and collect drilling waste immediately. Close doors to contain dust and noise. Schedule noisy work during meal times when residents are away from adjacent areas.',rr:'LOW'},
+    {n:5,task:'Patient area electrical work (clinical areas)',hazards:'Non-compliant electrical installation in patient areas causing electric shock to medically vulnerable persons',ir:'EXTREME',controls:'Patient area electrical work must comply with AS/NZS 3003. Isolated power systems, medical-grade GPOs, and specific earth leakage requirements apply. Do not modify patient area installations without confirming full compliance requirements.',rr:'LOW'},
+    {n:6,task:'Departure and site reinstatement',hazards:'Leaving site in unsafe condition, resident accessing incomplete work',ir:'HIGH',controls:'Confirm all medical equipment is operating correctly before leaving. Check all tools and materials are removed. Brief facility manager on work completed and any issues. Provide written record of any defects noted in existing installation.',rr:'LOW'},
+   ]},
+  {ref:'030',name:'Commercial Kitchen Electrical Work',cat:'Specialist electrical',
+   ppe:['Safety glasses','Insulated gloves (1000V)','Steel-capped non-slip boots','Hi-vis vest','Hard hat','Arc flash PPE (three-phase work)','P2 dust mask (drilling)','Heat-resistant gloves'],
+   legislation:['AS/NZS 3000:2018 Commercial cooking equipment wiring','AS/NZS 3001.2 Food premises electrical installations','Food Act 2003 (NSW)','NSW Food Authority — notification requirements'],
+   steps:[
+    {n:1,task:'Coordination with kitchen management and food safety',hazards:'Contaminating food preparation areas, working during food service',ir:'HIGH',controls:'Schedule work during kitchen shutdown wherever possible. Cover all food preparation surfaces and equipment. Remove food from area. Brief kitchen manager on scope and duration. Clean all work areas to food-safe standard on completion.',rr:'LOW'},
+    {n:2,task:'Isolation of commercial kitchen equipment — three-phase supply',hazards:'Three-phase shock from large commercial cooking equipment, equipment restart scalding staff',ir:'EXTREME',controls:'Wear arc flash PPE for all three-phase switchboard work. LOTO all relevant circuits. Confirm all cooking equipment is cool before working in proximity. Notify kitchen staff which equipment is isolated.',rr:'MEDIUM'},
+    {n:3,task:'Working in wet commercial kitchen environment',hazards:'Electric shock risk in wet, conductive floor environment',ir:'HIGH',controls:'Dry the immediate work area before commencing. All circuits in wet areas must be RCD protected. Do not work on live circuits in wet commercial kitchen — no exceptions. Use rubber matting at work area. Non-slip waterproof footwear.',rr:'LOW'},
+    {n:4,task:'Commercial exhaust canopy and ventilation electrical work',hazards:'Grease-soaked canopies presenting fire risk, working at height above cooking equipment',ir:'HIGH',controls:'Canopy extraction wiring must be in sealed conduit. Confirm canopy is clean before hot work nearby. Confirm equipment is isolated and cool before working at height above cooking equipment.',rr:'LOW'},
+    {n:5,task:'Testing and commissioning commercial kitchen circuits',hazards:'Incorrect phase connection to cooking equipment causing equipment damage or fire',ir:'HIGH',controls:'Confirm correct phase rotation for three-phase equipment before energising. Test all RCDs. Insulation resistance test on all circuits. Confirm correct circuit ratings — commercial equipment is high-load continuous duty. Issue Electrical Safety Certificate.',rr:'LOW'},
+    {n:6,task:'Clean-up and return to food-safe condition',hazards:'Leaving contamination, swarf, or debris in food preparation area',ir:'HIGH',controls:'Remove all tools and materials. Vacuum and wipe all surfaces. Remove all drop sheets. Inspect for dropped fasteners, cable offcuts, or tools. Brief kitchen manager on areas worked on before recommencing food preparation.',rr:'LOW'},
+   ]},
+  {ref:'031',name:'Communications & Data Cabling — NBN, CCTV, Intercoms & AV',cat:'Communications',
+   ppe:['Safety glasses','Steel-capped boots','Hi-vis vest','P2 dust mask (drilling)','Insulated gloves (near mains wiring)','Hearing protection (drilling)','Knee pads','Sun protection (external cabling)'],
+   legislation:['AS/ACIF S009 Installation requirements for customer cabling','Telecommunications Act 1997 (Cth)','ACMA — Open Cabling Scheme registration requirements','AS/NZS 3000:2018 Separation of ELV and mains wiring'],
+   steps:[
+    {n:1,task:'Cabling licence and regulatory compliance check',hazards:'Performing registered cabling work without appropriate ACMA Open Cabling Registration',ir:'MEDIUM',controls:'Confirm work scope — structured cabling, NBN connections, and work on customer cabling networks requires ACMA Cabling Provider Licence (CPL). Electrical licence covers cabling associated with electrical systems. Confirm appropriate registration before commencing.',rr:'LOW'},
+    {n:2,task:'Pre-work site assessment — existing services and asbestos',hazards:'Drilling into existing services, asbestos in walls and ceilings',ir:'HIGH',controls:'Use cable and service detector before any drilling. Check building age — pre-2003 buildings: assume asbestos in walls and ceilings until confirmed. Do not drill through fibrous cement sheeting without asbestos assessment. Plan cable routes to avoid unnecessary penetrations.',rr:'LOW'},
+    {n:3,task:'Cable installation — wall and ceiling penetrations',hazards:'Contact with live mains wiring in wall cavities, falls from ladder, dust inhalation',ir:'HIGH',controls:'Use non-conductive fish rods for cable installation in walls. Wear insulated gloves when pulling cables through cavities. Wear P2 mask for all wall and ceiling drilling. Seal all penetrations through fire-rated walls with fire-rated sealant.',rr:'LOW'},
+    {n:4,task:'Separation from mains electrical wiring',hazards:'Induced voltage or cross-connection between data/comms cabling and mains wiring',ir:'MEDIUM',controls:'Maintain minimum 50mm separation between data/comms cables and mains wiring in parallel runs — 100mm preferred. Where crossing is unavoidable, cross at 90 degrees. Never run data cabling in same conduit as mains wiring.',rr:'LOW'},
+    {n:5,task:'Working on active NBN or telecommunications infrastructure',hazards:'Disrupting live services, working on Telstra/NBN infrastructure without authority',ir:'MEDIUM',controls:'Do not work on network infrastructure without appropriate authority. Customer-side work only unless specifically authorised. Do not assume legacy copper services are de-energised — ring voltage (90V AC) exists on active telephone lines.',rr:'LOW'},
+    {n:6,task:'CCTV and security system installation — height and electrical risks',hazards:'Falls from height during external camera installation, contact with mains wiring',ir:'HIGH',controls:'Follow AT-SWMS-004 for all ladder use. External cameras may require roof or soffit access — follow AT-SWMS-006 for roof work. Confirm power supply circuit is isolated before connecting camera power supply. IP-rated enclosures for all external equipment. Seal cable entry points against water ingress.',rr:'LOW'},
+   ]},
+];
+
+const CATS = [...new Set(SWMS.map(s=>s.cat))];
+
+function filterSwms() {
+  const q = document.getElementById('search').value.toLowerCase();
+  document.querySelectorAll('.swms-item').forEach(el => {
+    const text = el.getAttribute('data-search');
+    el.style.display = text.includes(q) ? 'block' : 'none';
+  });
+  document.querySelectorAll('.cat-label').forEach(el => {
+    const cat = el.getAttribute('data-cat');
+    const anyVisible = [...document.querySelectorAll(`.swms-item[data-cat="${cat}"]`)]
+      .some(i => i.style.display !== 'none');
+    el.style.display = anyVisible ? 'block' : 'none';
+  });
+}
+
+function toggle(ref) {
+  const body = document.getElementById('body-'+ref);
+  const chev = document.getElementById('chev-'+ref);
+  const isOpen = body.classList.toggle('open');
+  chev.classList.toggle('open', isOpen);
+  body.style.display = isOpen ? 'block' : 'none';
+}
+
+function renderList() {
+  const list = document.getElementById('list');
+  let html = '';
+  CATS.forEach(cat => {
+    const items = SWMS.filter(s => s.cat === cat);
+    html += `<span class="cat-label" data-cat="${cat}">${cat}</span>`;
+    items.forEach(s => {
+      const searchText = `${s.ref} ${s.name} ${s.cat} ${s.ppe.join(' ')} ${s.steps.map(st=>st.task+' '+st.hazards+' '+st.controls).join(' ')}`.toLowerCase();
+      html += `<div class="swms-item" data-search="${searchText}" data-cat="${s.cat}">
+        <div class="swms-item-hdr" onclick="toggle('${s.ref}')">
+          <span class="ref-badge">AT-SWMS-${s.ref}</span>
+          <span class="swms-name">${s.name}</span>
+          <span class="swms-chevron" id="chev-${s.ref}">›</span>
+        </div>
+        <div class="swms-body" id="body-${s.ref}">
+          <div class="swms-section">
+            <div class="swms-section-title">PPE required</div>
+            <div class="ppe-grid">${s.ppe.map(p=>`<div class="ppe-item">${p}</div>`).join('')}</div>
+          </div>
+          <div class="swms-section">
+            <div class="swms-section-title">Hazard identification & controls</div>
+            ${s.steps.map(st=>`
+              <div class="step-card">
+                <div class="step-hdr">
+                  <div class="step-num">${st.n}</div>
+                  <div class="step-task">${st.task}</div>
+                </div>
+                <div class="risk-row">
+                  <span class="risk-pill ${st.ir}">${st.ir}</span>
+                  <span class="risk-arrow">→</span>
+                  <span class="risk-pill ${st.rr}">${st.rr}</span>
+                </div>
+                <div class="step-hazards"><strong>Hazards:</strong> ${st.hazards}</div>
+                <div class="step-controls" style="margin-top:6px"><strong>Controls:</strong> ${st.controls}</div>
+              </div>`).join('')}
+          </div>
+          <div class="swms-section">
+            <div class="swms-section-title">Relevant legislation & standards</div>
+            ${s.legislation.map(l=>`<div class="leg-item">${l}</div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    });
+  });
+  list.innerHTML = html;
+}
+
+renderList();
+</script>
+</body>
+</html>
