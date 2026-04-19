@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0F6E56">
+<title>AitkenTech Field App</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+:root{--teal:#4EC6C0;--teal-dk:#0F6E56;--teal-lt:#E1F5EE;--navy:#1A1A2E;--red:#E24B4A;--amber:#E67E22;--green:#27AE60;--bg:#F4F6F5;--surface:#fff;--border:rgba(0,0,0,0.08);--text:#1A1A2E;--text2:#5A6472;--text3:#9BA3AD;--r:14px;--r-sm:8px;--font:'DM Sans',sans-serif;--mono:'DM Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;padding-bottom:90px}
+.app-hdr{background:var(--navy);padding:52px 20px 20px;display:flex;align-items:flex-end;justify-content:space-between}
+.app-hdr h1{color:#fff;font-size:22px;font-weight:600;letter-spacing:-.3px}
+.app-hdr span{color:var(--teal);font-size:13px;font-weight:500}
+.tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.tab-btn{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-family:var(--font);font-size:10px;font-weight:500;color:var(--text3)}
+.tab-btn.on{color:var(--teal-dk)}
+.tab-icon{font-size:20px;line-height:1}
+.page{display:none;padding:16px}
+.page.on{display:block}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:16px;margin-bottom:12px}
+.card-ttl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.hero{border-radius:var(--r);padding:20px;margin-bottom:12px;cursor:pointer;position:relative;overflow:hidden;border:none;width:100%;text-align:left;font-family:var(--font)}
+.hero:active{opacity:.88}
+.hero.teal{background:var(--teal-dk)}.hero.navy{background:var(--navy)}.hero.red{background:#8B1A19}.hero.amber{background:#7A4010}
+.hc-lbl{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;opacity:.6;color:#fff;margin-bottom:6px}
+.hc-ttl{font-size:20px;font-weight:600;color:#fff;line-height:1.2}
+.hc-sub{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px}
+.hc-arr{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:22px;color:rgba(255,255,255,.4)}
+.field{margin-bottom:14px;position:relative}
+.field label{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.03em;display:block;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:var(--font);font-size:15px;background:var(--bg);color:var(--text);-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--teal)}
+.field textarea{min-height:80px;resize:vertical}
+.addr-drop{background:var(--surface);border:1.5px solid var(--teal);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);display:none;position:absolute;left:0;right:0;z-index:200;max-height:220px;overflow-y:auto}
+.addr-opt{padding:10px 13px;font-size:14px;color:var(--text);border-bottom:1px solid var(--border);cursor:pointer;line-height:1.4}
+.addr-opt:last-child{border-bottom:none}
+.addr-opt:active{background:var(--teal-lt)}
+.addr-opt b{font-weight:600;display:block}
+.addr-opt small{font-size:12px;color:var(--text3)}
+.btn{display:block;width:100%;padding:15px;border:none;border-radius:var(--r);font-family:var(--font);font-size:16px;font-weight:600;cursor:pointer;margin-top:4px}
+.btn-p{background:var(--teal-dk);color:#fff}.btn-p:active{background:#0a5541}
+.btn-s{background:transparent;color:var(--text2);border:1.5px solid var(--border);margin-top:8px}.btn-s:active{background:var(--bg)}
+.btn-d{background:var(--red);color:#fff}
+.swms-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.chip{padding:10px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surface);cursor:pointer;text-align:left;width:100%}
+.chip.on{border-color:var(--teal);background:var(--teal-lt)}
+.chip .ref{font-size:10px;font-weight:600;font-family:var(--mono);color:var(--teal-dk);display:block;margin-bottom:2px}
+.chip .nm{font-size:12px;color:var(--text);line-height:1.3}
+.chip.on .nm{color:var(--teal-dk)}
+.worker-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.worker-row:last-child{border-bottom:none}
+.avatar{width:40px;height:40px;border-radius:50%;background:var(--teal-lt);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:var(--teal-dk);flex-shrink:0}
+.winfo{flex:1}.wname{font-size:14px;font-weight:500}.wrole{font-size:12px;color:var(--text3)}
+.sign-btn{padding:7px 14px;border-radius:999px;border:1.5px solid var(--border);background:var(--surface);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;color:var(--text2)}
+.signed{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--green)}
+.sig-wrap{border:2px dashed var(--teal);border-radius:var(--r);background:var(--surface);padding:4px;margin-bottom:10px}
+canvas{display:block;width:100%;touch-action:none;border-radius:10px}
+.steps{display:flex;gap:6px;margin-bottom:20px}
+.dot{flex:1;height:3px;border-radius:99px;background:var(--border)}
+.dot.done{background:var(--teal)}.dot.now{background:var(--teal-dk)}
+.sh{font-size:20px;font-weight:600;margin-bottom:4px}
+.ss{font-size:14px;color:var(--text2);margin-bottom:20px}
+.sev-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.sev{padding:12px 8px;border-radius:var(--r-sm);border:2px solid transparent;cursor:pointer;text-align:center;font-family:var(--font);font-size:12px;font-weight:600;width:100%}
+.sev.g{background:#E8F8EF;color:#0a5541}.sev.y{background:#FEF8E8;color:#7A4010}
+.sev.o{background:#FEF0E8;color:#7A1010}.sev.r{background:#FEE8E8;color:#7A0000}
+.sev.on{border-color:currentColor}
+.rec-item{display:flex;align-items:center;gap:12px;padding:13px;background:var(--surface);border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px}
+.rdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.rdot.s{background:var(--teal)}.rdot.p{background:var(--navy)}.rdot.i{background:var(--red)}.rdot.h{background:var(--amber)}
+.rttl{font-size:14px;font-weight:500}.rsub{font-size:12px;color:var(--text3)}.rarr{margin-left:auto;color:var(--text3);font-size:16px}
+.chk-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.chk-row:last-child{border-bottom:none}
+.chk-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:1px}
+.chk-box.on{background:var(--teal-dk);border-color:var(--teal-dk);color:#fff}
+.chk-lbl{font-size:14px;line-height:1.4;flex:1}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:600}
+.badge.g{background:#E8F8EF;color:#0a5541}.badge.a{background:#FEF0E8;color:#7A4010}
+.success{text-align:center;padding:48px 20px}
+.suc-icon{font-size:56px;margin-bottom:16px}.suc-ttl{font-size:24px;font-weight:600;margin-bottom:8px}.suc-sub{font-size:15px;color:var(--text2);margin-bottom:32px}
+.rv-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);font-size:14px}
+.rv-row:last-child{border-bottom:none}
+.rv-lbl{color:var(--text2);flex-shrink:0;margin-right:12px}.rv-val{text-align:right;word-break:break-word;font-weight:500}
+.pnav{display:flex;align-items:center;margin-bottom:20px}
+.back{background:none;border:none;cursor:pointer;font-size:22px;color:var(--text2);padding:0;margin-right:12px}
+.pnav h2{font-size:18px;font-weight:600}
+.empty{text-align:center;padding:48px 20px;color:var(--text3);font-size:14px}
+.hd{font-size:12px;font-weight:600;font-family:var(--mono);color:var(--teal-dk);margin-bottom:8px}
+.hg{font-size:26px;font-weight:600;letter-spacing:-.3px}.hp{font-size:14px;color:var(--text2);margin-top:3px}
+</style>
+</head>
+<body>
+<div class="app-hdr">
+  <div><h1>AitkenTech</h1><span>Field Safety App</span></div>
+  <div style="color:rgba(255,255,255,.4);font-size:12px">Licence 366823C</div>
+</div>
+
+<div class="page on" id="pg-home">
+  <div style="padding:20px 0 8px">
+    <div class="hd" id="home-date"></div>
+    <div class="hg">Good morning,<br>Aaron.</div>
+    <div class="hp">What do you need to do today?</div>
+  </div>
+  <button class="hero teal" onclick="go('swms')"><div class="hc-lbl">SWMS</div><div class="hc-ttl">Job sign-on</div><div class="hc-sub">Select SWMS &amp; get signatures</div><span class="hc-arr">&#8250;</span></button>
+  <button class="hero navy" onclick="go('prestart')"><div class="hc-lbl">Daily</div><div class="hc-ttl">Pre-start checklist</div><div class="hc-sub">Vehicle, tools &amp; site check</div><span class="hc-arr">&#8250;</span></button>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button class="hero red" onclick="go('incident')"><div class="hc-lbl">Safety</div><div class="hc-ttl" style="font-size:17px">Incident<br>report</div><span class="hc-arr" style="font-size:18px">&#8250;</span></button>
+    <button class="hero amber" onclick="go('hazard')"><div class="hc-lbl">Safety</div><div class="hc-ttl" style="font-size:17px">Hazard<br>report</div><span class="hc-arr" style="font-size:18px">&#8250;</span></button>
+  </div>
+</div>
+
+<div class="page" id="pg-swms">
+  <div class="pnav"><button class="back" onclick="go('home')">&#8592;</button><h2>Job sign-on</h2></div>
+  <div class="steps" id="sw-steps"></div>
+  <div id="sw1">
+    <div class="sh">Job details</div><div class="ss">Where are you working today?</div>
+    <div class="card">
+      <div class="field"><label>Job address</label><input type="text" id="sw-addr" placeholder="Start typing address..." autocomplete="off" oninput="aLookup('sw-addr')"><div class="addr-drop" id="sw-addr-drop"></div></div>
+      <div class="field"><label>Job description</label><input type="text" id="sw-desc" placeholder="e.g. Domestic wiring, smoke alarms"></div>
+      <div class="field"><label>Date</label><input type="date" id="sw-date"></div>
+      <div class="field"><label>Job number (optional)</label><input type="text" id="sw-jobnum" placeholder="ServiceM8 job #"></div>
+    </div>
+    <button class="btn btn-p" onclick="swGo(2)">Next &#8212; select SWMS</button>
+  </div>
+  <div id="sw2" style="display:none">
+    <div class="sh">Select SWMS</div><div class="ss">Tap all that apply to this job</div>
+    <div class="swms-grid" id="sw-chips"></div>
+    <div class="card"><div class="field"><label>Site-specific hazards or variations</label><textarea id="sw-vars" placeholder="e.g. Roof space very hot — work before 10am only."></textarea></div></div>
+    <button class="btn btn-p" onclick="swGo(3)">Next &#8212; worker sign-on</button>
+    <button class="btn btn-s" onclick="swGo(1)">Back</button>
+  </div>
+  <div id="sw3" style="display:none">
+    <div class="sh">Worker sign-on</div><div class="ss">Each worker signs to confirm they have read the SWMS</div>
+    <div class="card" id="sw-workers"></div>
+    <div id="sw-sigpanel" style="display:none">
+      <div class="card">
+        <div class="card-ttl" id="sw-siglbl">Signing as Aaron Aitken</div>
+        <div class="sig-wrap"><canvas id="sw-canvas" height="130"></canvas></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-s" style="margin-top:0;flex:1" onclick="clrCanvas('sw-canvas')">Clear</button>
+          <button class="btn btn-p" style="margin-top:0;flex:2" onclick="saveSig()">Save signature</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-p" onclick="swGo(4)">Next &#8212; review</button>
+    <button class="btn btn-s" onclick="swGo(2)">Back</button>
+  </div>
+  <div id="sw4" style="display:none">
+    <div class="sh">Review &amp; save</div><div class="ss">Confirm everything looks right</div>
+    <div class="card" id="sw-review"></div>
+    <button class="btn btn-p" onclick="saveSwms()">Save job record</button>
+    <button class="btn btn-s" onclick="swGo(3)">Back</button>
+  </div>
+  <div id="sw-ok" style="display:none">
+    <div class="success"><div class="suc-icon">&#9989;</div><div class="suc-ttl">Job record saved</div><div class="suc-sub">Sign-on recorded and emailed</div>
+    <button class="btn btn-p" onclick="go('swms')">New sign-on</button>
+    <button class="btn btn-s" onclick="go('records')">View records</button></div>
+  </div>
+</div>
+
+<div class="page" id="pg-prestart">
+  <div class="pnav"><button class="back" onclick="go('home')">&#8592;</button><h2>Pre-start checklist</h2></div>
+  <div id="ps-form">
+    <div class="card">
+      <div class="card-ttl">Job details</div>
+      <div class="field"><label>Date</label><input type="date" id="ps-date"></div>
+      <div class="field"><label>Job address</label><input type="text" id="ps-addr" placeholder="Start typing address..." autocomplete="off" oninput="aLookup('ps-addr')"><div class="addr-drop" id="ps-addr-drop"></div></div>
+      <div class="field"><label>Job number (optional)</label><input type="text" id="ps-jobnum"></div>
+      <div class="field"><label>Weather</label><select id="ps-wx"><option>Fine / sunny</option><option>Overcast</option><option>Light rain</option><option>Heavy rain</option><option>Hot (+35°C)</option><option>Windy</option></select></div>
+    </div>
+    <div class="card" id="ps-v"></div>
+    <div class="card" id="ps-s"></div>
+    <div class="card" id="ps-e"></div>
+    <div class="card" id="ps-a"></div>
+    <div class="card"><div class="card-ttl">Actions required</div><div class="field"><textarea id="ps-actions" placeholder="Note any items that failed and what action was taken..."></textarea></div></div>
+    <div class="card">
+      <div class="card-ttl">Supervisor sign-off</div>
+      <div class="field" style="margin-bottom:12px"><label>Supervising today</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="sup-sel">
+          <button class="chip on" onclick="selSup(this,'Aaron Aitken','Director / Supervising Electrician')"><span class="ref">Supervisor</span><span class="nm">Aaron Aitken</span></button>
+          <button class="chip" onclick="selSup(this,'Ian Aitken','Director / Electrical Worker')"><span class="ref">Director</span><span class="nm">Ian Aitken</span></button>
+        </div>
+      </div>
+      <div class="sig-wrap"><canvas id="ps-canvas" height="110"></canvas></div>
+      <p style="font-size:12px;color:var(--text3);margin-top:4px" id="ps-siglbl">Aaron Aitken &#8212; Director / Supervising Electrician</p>
+      <button class="btn btn-s" style="margin-top:8px" onclick="clrCanvas('ps-canvas')">Clear signature</button>
+    </div>
+    <button class="btn btn-p" onclick="savePs()">Save checklist</button>
+  </div>
+  <div id="ps-ok" style="display:none">
+    <div class="success"><div class="suc-icon">&#9989;</div><div class="suc-ttl">Checklist saved</div><div class="suc-sub">Pre-start recorded and emailed</div>
+    <button class="btn btn-p" onclick="resetPs()">New checklist</button>
+    <button class="btn btn-s" onclick="go('records')">View records</button></div>
+  </div>
+</div>
+
+<div class="page" id="pg-incident">
+  <div class="pnav"><button class="back" onclick="go('home')">&#8592;</button><h2>Incident report</h2></div>
+  <div id="inc-form">
+    <div class="card" style="border-color:var(--red);background:#FEF0EF">
+      <div style="font-size:13px;font-weight:600;color:var(--red);margin-bottom:4px">If life-threatening &#8212; call 000 first</div>
+      <div style="font-size:12px;color:#7A0000">Safe Work NSW: 13 10 50 (notifiable incidents)</div>
+    </div>
+    <div class="card"><div class="card-ttl">Incident type</div>
+      <div class="sev-grid">
+        <button class="sev g" onclick="setSev(this,'Near miss')">Near miss</button>
+        <button class="sev y" onclick="setSev(this,'First aid')">First aid</button>
+        <button class="sev o" onclick="setSev(this,'Medical treatment')">Medical treatment</button>
+        <button class="sev r" onclick="setSev(this,'Lost time / notifiable')">Lost time / notifiable</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-ttl">Incident details</div>
+      <div class="field"><label>Date</label><input type="date" id="inc-date"></div>
+      <div class="field"><label>Time</label><input type="time" id="inc-time"></div>
+      <div class="field"><label>Location / job address</label><input type="text" id="inc-addr" placeholder="Start typing address..." autocomplete="off" oninput="aLookup('inc-addr')"><div class="addr-drop" id="inc-addr-drop"></div></div>
+      <div class="field"><label>Person(s) involved</label><input type="text" id="inc-persons" placeholder="e.g. Austin Clarke"></div>
+      <div class="field"><label>Injury description (if any)</label><input type="text" id="inc-injury" placeholder="e.g. Laceration to left hand"></div>
+    </div>
+    <div class="card"><div class="card-ttl">What happened?</div><div class="field"><textarea id="inc-desc" placeholder="Describe what happened in sequence..." style="min-height:120px"></textarea></div></div>
+    <div class="card"><div class="card-ttl">Cause &amp; actions</div>
+      <div class="field"><label>Immediate cause</label><input type="text" id="inc-cause" placeholder="e.g. Unsafe act, equipment failure..."></div>
+      <div class="field"><label>Actions taken immediately</label><textarea id="inc-actions" placeholder="What was done to make the situation safe?"></textarea></div>
+      <div class="field"><label>Corrective actions required</label><textarea id="inc-corrective" placeholder="What needs to happen to prevent recurrence?"></textarea></div>
+    </div>
+    <div class="card"><div class="card-ttl">Reported by &#8212; signature</div>
+      <div class="sig-wrap"><canvas id="inc-canvas" height="110"></canvas></div>
+      <button class="btn btn-s" style="margin-top:8px" onclick="clrCanvas('inc-canvas')">Clear</button>
+    </div>
+    <button class="btn btn-d" onclick="saveInc()">Submit incident report</button>
+    <button class="btn btn-s" onclick="go('home')">Cancel</button>
+  </div>
+  <div id="inc-ok" style="display:none">
+    <div class="success"><div class="suc-icon">&#128203;</div><div class="suc-ttl">Report submitted</div><div class="suc-sub">Incident recorded and emailed. If notifiable, call Safe Work NSW on 13 10 50.</div>
+    <button class="btn btn-p" onclick="resetInc()">New report</button>
+    <button class="btn btn-s" onclick="go('records')">View records</button></div>
+  </div>
+</div>
+
+<div class="page" id="pg-hazard">
+  <div class="pnav"><button class="back" onclick="go('home')">&#8592;</button><h2>Hazard report</h2></div>
+  <div id="haz-form">
+    <div class="card"><div class="card-ttl">Hazard details</div>
+      <div class="field"><label>Date identified</label><input type="date" id="haz-date"></div>
+      <div class="field"><label>Location / job address</label><input type="text" id="haz-addr" placeholder="Start typing address..." autocomplete="off" oninput="aLookup('haz-addr')"><div class="addr-drop" id="haz-addr-drop"></div></div>
+      <div class="field"><label>Describe the hazard</label><textarea id="haz-desc" placeholder="What is the hazard? What could go wrong?"></textarea></div>
+      <div class="field"><label>Who is at risk</label><input type="text" id="haz-who" placeholder="e.g. All workers, Austin Clarke, public"></div>
+    </div>
+    <div class="card"><div class="card-ttl">Risk rating</div>
+      <div class="sev-grid">
+        <button class="sev g" onclick="setRisk(this,'Low')">Low</button>
+        <button class="sev y" onclick="setRisk(this,'Medium')">Medium</button>
+        <button class="sev o" onclick="setRisk(this,'High')">High</button>
+        <button class="sev r" onclick="setRisk(this,'Extreme')">Extreme</button>
+      </div>
+    </div>
+    <div class="card"><div class="card-ttl">Controls</div>
+      <div class="field"><label>Control measures in place or required</label><textarea id="haz-controls" placeholder="What will be done to control this hazard?"></textarea></div>
+      <div class="field"><label>Action required by</label><input type="text" id="haz-by" placeholder="e.g. Aaron Aitken"></div>
+      <div class="field"><label>Target completion date</label><input type="date" id="haz-target"></div>
+    </div>
+    <div class="card"><div class="card-ttl">Reported by &#8212; signature</div>
+      <div class="sig-wrap"><canvas id="haz-canvas" height="110"></canvas></div>
+      <button class="btn btn-s" style="margin-top:8px" onclick="clrCanvas('haz-canvas')">Clear</button>
+    </div>
+    <button class="btn btn-p" onclick="saveHaz()">Save hazard report</button>
+    <button class="btn btn-s" onclick="go('home')">Cancel</button>
+  </div>
+  <div id="haz-ok" style="display:none">
+    <div class="success"><div class="suc-icon">&#9888;&#65039;</div><div class="suc-ttl">Hazard recorded</div><div class="suc-sub">Added to hazard register and emailed</div>
+    <button class="btn btn-p" onclick="resetHaz()">New report</button>
+    <button class="btn btn-s" onclick="go('records')">View records</button></div>
+  </div>
+</div>
+
+<div class="page" id="pg-records">
+  <div style="padding-bottom:12px"><div class="hg" style="font-size:22px">Records</div><div class="hp">All saved safety documents</div></div>
+  <div id="rec-list"></div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab-btn on" onclick="go('home')" id="tb-home"><span class="tab-icon">&#9889;</span>Home</button>
+  <button class="tab-btn" onclick="go('swms')" id="tb-swms"><span class="tab-icon">&#128203;</span>Sign-on</button>
+  <button class="tab-btn" onclick="go('prestart')" id="tb-pre"><span class="tab-icon">&#9989;</span>Pre-start</button>
+  <button class="tab-btn" onclick="go('records')" id="tb-rec"><span class="tab-icon">&#128193;</span>Records</button>
+</div>
+
+<script>
+var EP='https://formspree.io/f/mykljpyp';
+var SWMS=[['001','Domestic wiring'],['002','Switchboard work'],['003','Testing & tagging'],['004','Working at heights'],['005','Underground/pit'],['006','Roof work'],['007','Generator & temp power'],['008','Overhead lines'],['009','Smoke alarms'],['010','Solar PV'],['011','EV charger'],['012','Demolition/strip out'],['013','Fault finding'],['014','Occupied premises'],['015','Wet/damp conditions'],['016','Confined spaces'],['017','Asbestos awareness'],['018','Working alone'],['019','Hot work'],['020','Manual tasks'],['021','Power tools'],['022','Extreme heat'],['023','Traffic management'],['024','Caravan parks'],['025','Marine/wharf/jetty'],['026','Agricultural/rural'],['027','EWP/boom lift'],['028','Pools & spas'],['029','Aged care/NDIS'],['030','Commercial kitchen'],['031','Data/comms cabling']];
+var WK=[{n:'Aaron Aitken',r:'Supervising Electrician',i:'AA'},{n:'Austin Clarke',r:'Apprentice Electrician',i:'AC'},{n:'Ian Aitken',r:'Electrical Worker',i:'IA'}];
+var PSC={'Vehicle & tools':['Vehicle — tyres, lights, fluids, no damage','Vehicle load secured — tools, ladders, materials','First aid kit present and stocked','Fire extinguisher present in vehicle','All power tools have current test & tag','Extension leads in good condition','Voltage tester present and functional','LOTO equipment present (locks, tags)','PPE present — glasses, gloves, boots, hi-vis','Mobile phone charged'],'Site conditions':['Site access is safe — no slip/trip hazards','Overhead powerlines identified and clearance confirmed','Underground services identified (DBYD / locator)','Asbestos register checked (pre-2003 buildings)','Emergency exits identified','Work area clear of unauthorised persons','Weather conditions suitable for planned work'],'Electrical safety':['Relevant SWMS identified and signed','SWMS job register entry completed','Circuits to be worked on identified','Isolation / LOTO plan confirmed','RCD protection available for all portable tools','Electrical Safety Certificate book in vehicle'],'Apprentice check (Austin)':["Austin briefed on today's tasks and hazards",'Austin will not perform live work unsupervised','Austin understands isolation procedures for today',"Austin's PPE suitable for today's tasks"]};
+var S={sel:[],sigs:{},cur:null,sev:'',risk:'',chks:{},sup:'Aaron Aitken',recs:[]};
+try{S.recs=JSON.parse(localStorage.getItem('at_r')||'[]');}catch(e){}
+function sv(){try{localStorage.setItem('at_r',JSON.stringify(S.recs));}catch(e){}}
+function fd(d){if(!d)return'—';var p=d.split('-'),m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return parseInt(p[2])+' '+m[parseInt(p[1])-1]+' '+p[0];}
+function td(){return new Date().toISOString().slice(0,10);}
+function post(data){fetch(EP,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(data)}).catch(function(){});}
+function go(pg){
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('pg-'+pg).classList.add('on');
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('on');});
+  var m={home:'tb-home',swms:'tb-swms',prestart:'tb-pre',records:'tb-rec'};
+  if(m[pg])document.getElementById(m[pg]).classList.add('on');
+  if(pg==='swms')iSw();
+  if(pg==='prestart')iPs();
+  if(pg==='incident')iInc();
+  if(pg==='hazard')iHaz();
+  if(pg==='records')rRec();
+  window.scrollTo(0,0);
+}
+function iSw(){
+  S.sel=[];S.sigs={};S.cur=null;
+  ['sw1','sw2','sw3','sw4','sw-ok'].forEach(function(id){document.getElementById(id).style.display='none';});
+  ['sw-addr','sw-desc','sw-jobnum','sw-vars'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('sw-date').value=td();
+  document.getElementById('sw1').style.display='block';
+  rDots(1);
+}
+function rDots(n){document.getElementById('sw-steps').innerHTML=[1,2,3,4].map(function(i){return'<div class="dot '+(i<n?'done':i===n?'now':'')+'"></div>';}).join('');}
+function swGo(n){
+  ['sw1','sw2','sw3','sw4','sw-ok'].forEach(function(id){document.getElementById(id).style.display='none';});
+  document.getElementById('sw'+n).style.display='block';
+  rDots(n);
+  if(n===2)rChips();
+  if(n===3)rWk();
+  if(n===4)rRev();
+  window.scrollTo(0,0);
+}
+function rChips(){document.getElementById('sw-chips').innerHTML=SWMS.map(function(s){var on=S.sel.indexOf(s[0])>-1;return'<button class="chip'+(on?' on':'')+'" onclick="tgSw(\''+s[0]+'\',this)"><span class="ref">AT-SWMS-'+s[0]+'</span><span class="nm">'+s[1]+'</span></button>';}).join('');}
+function tgSw(r,el){var i=S.sel.indexOf(r);if(i>-1){S.sel.splice(i,1);el.classList.remove('on');}else{S.sel.push(r);el.classList.add('on');}}
+function rWk(){
+  document.getElementById('sw-sigpanel').style.display='none';
+  document.getElementById('sw-workers').innerHTML='<div class="card-ttl">Tap name to sign</div>'+WK.map(function(w){var ok=S.sigs[w.i];return'<div class="worker-row"><div class="avatar">'+w.i+'</div><div class="winfo"><div class="wname">'+w.n+'</div><div class="wrole">'+w.r+'</div></div>'+(ok?'<div class="signed">&#10003; Signed</div>':'<button class="sign-btn" onclick="oSig(\''+w.i+'\',\''+w.n+'\')">Sign</button>')+'</div>';}).join('');
+}
+function oSig(ini,name){S.cur=ini;document.getElementById('sw-siglbl').textContent='Signing as '+name;document.getElementById('sw-sigpanel').style.display='block';var c=document.getElementById('sw-canvas');c.width=c.offsetWidth||320;sCanvas(c);document.getElementById('sw-sigpanel').scrollIntoView({behavior:'smooth',block:'center'});}
+function saveSig(){var c=document.getElementById('sw-canvas');S.sigs[S.cur]=c.toDataURL();document.getElementById('sw-sigpanel').style.display='none';rWk();}
+function rv(l,v){return'<div class="rv-row"><span class="rv-lbl">'+l+'</span><span class="rv-val">'+v+'</span></div>';}
+function rRev(){
+  var addr=document.getElementById('sw-addr').value||'—';
+  var desc=document.getElementById('sw-desc').value||'—';
+  var date=fd(document.getElementById('sw-date').value);
+  var jn=document.getElementById('sw-jobnum').value||'—';
+  var vars=document.getElementById('sw-vars').value||'None noted';
+  var sc=WK.filter(function(w){return S.sigs[w.i];}).length;
+  var ss=S.sel.length?S.sel.map(function(r){var s=null;for(var i=0;i<SWMS.length;i++){if(SWMS[i][0]===r){s=SWMS[i];break;}}return'AT-SWMS-'+r+(s?' '+s[1]:'');}).join(', '):'None selected';
+  document.getElementById('sw-review').innerHTML=rv('Address',addr)+rv('Description',desc)+rv('Date',date)+rv('Job No.',jn)+rv('SWMS','<span style="font-size:12px">'+ss+'</span>')+rv('Variations','<span style="font-size:12px">'+vars+'</span>')+rv('Signatures','<span class="badge '+(sc===3?'g':'a')+'">'+sc+'/3 signed</span>');
+}
+function saveSwms(){
+  var rec={id:Date.now(),type:'swms',address:document.getElementById('sw-addr').value||'No address',desc:document.getElementById('sw-desc').value,date:document.getElementById('sw-date').value,jobnum:document.getElementById('sw-jobnum').value,swms:S.sel.slice(),vars:document.getElementById('sw-vars').value,sigCount:WK.filter(function(w){return S.sigs[w.i];}).length,ts:Date.now()};
+  S.recs.unshift(rec);sv();
+  var ss=rec.swms.map(function(r){var s=null;for(var i=0;i<SWMS.length;i++){if(SWMS[i][0]===r){s=SWMS[i];break;}}return'AT-SWMS-'+r+(s?' '+s[1]:'');}).join(', ');
+  post({_subject:'AitkenTech — Job Sign-On: '+rec.address,form_type:'Job Sign-On (SWMS)',date:fd(rec.date),job_address:rec.address,job_description:rec.desc||'—',job_number:rec.jobnum||'—',swms_applied:ss||'None',site_variations:rec.vars||'None noted',signatures_obtained:rec.sigCount+' of 3',workers_signed:WK.filter(function(w){return S.sigs[w.i];}).map(function(w){return w.n;}).join(', ')||'None',timestamp:new Date().toLocaleString('en-AU')});
+  ['sw1','sw2','sw3','sw4'].forEach(function(id){document.getElementById(id).style.display='none';});
+  document.getElementById('sw-ok').style.display='block';
+}
+function iPs(){
+  S.chks={};S.sup='Aaron Aitken';
+  document.getElementById('ps-date').value=td();
+  document.getElementById('ps-form').style.display='block';
+  document.getElementById('ps-ok').style.display='none';
+  ['ps-addr','ps-jobnum','ps-actions'].forEach(function(id){document.getElementById(id).value='';});
+  var els=['ps-v','ps-s','ps-e','ps-a'];
+  Object.keys(PSC).forEach(function(sec,si){var items=PSC[sec];document.getElementById(els[si]).innerHTML='<div class="card-ttl">'+sec+'</div>'+items.map(function(item,i){var k=si+'-'+i;return'<div class="chk-row" onclick="tgChk(\''+k+'\',this)"><div class="chk-box" id="cb-'+k+'"></div><div class="chk-lbl">'+item+'</div></div>';}).join('');});
+  var c=document.getElementById('ps-canvas');c.width=c.offsetWidth||320;sCanvas(c);
+}
+function tgChk(k,row){S.chks[k]=!S.chks[k];var b=document.getElementById('cb-'+k);if(S.chks[k]){b.classList.add('on');b.textContent='✓';}else{b.classList.remove('on');b.textContent='';}}
+function selSup(btn,name,role){document.querySelectorAll('#sup-sel .chip').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');S.sup=name;document.getElementById('ps-siglbl').textContent=name+' — '+role;clrCanvas('ps-canvas');}
+function savePs(){
+  var tot=0;Object.values(PSC).forEach(function(v){tot+=v.length;});
+  var chk=Object.values(S.chks).filter(Boolean).length;
+  var rec={id:Date.now(),type:'prestart',date:document.getElementById('ps-date').value,address:document.getElementById('ps-addr').value||'No address',jobnum:document.getElementById('ps-jobnum').value,weather:document.getElementById('ps-wx').value,supervisor:S.sup,checked:chk,total:tot,ts:Date.now()};
+  S.recs.unshift(rec);sv();
+  var det=Object.keys(PSC).map(function(sec,si){return sec+':\n'+PSC[sec].map(function(item,i){return(S.chks[si+'-'+i]?'✓ ':'✗ ')+item;}).join('\n');}).join('\n\n');
+  post({_subject:'AitkenTech — Pre-Start Checklist: '+rec.address,form_type:'Daily Pre-Start Checklist',date:fd(rec.date),job_address:rec.address,job_number:rec.jobnum||'—',supervisor:rec.supervisor,weather:rec.weather,checks_passed:chk+' of '+tot,actions_required:document.getElementById('ps-actions').value||'None',checklist_detail:det,timestamp:new Date().toLocaleString('en-AU')});
+  document.getElementById('ps-form').style.display='none';
+  document.getElementById('ps-ok').style.display='block';
+}
+function resetPs(){iPs();}
+function iInc(){
+  S.sev='';
+  document.getElementById('inc-form').style.display='block';
+  document.getElementById('inc-ok').style.display='none';
+  document.getElementById('inc-date').value=td();
+  document.getElementById('inc-time').value=new Date().toTimeString().slice(0,5);
+  ['inc-addr','inc-persons','inc-injury','inc-desc','inc-cause','inc-actions','inc-corrective'].forEach(function(id){document.getElementById(id).value='';});
+  document.querySelectorAll('.sev').forEach(function(b){b.classList.remove('on');});
+  var c=document.getElementById('inc-canvas');c.width=c.offsetWidth||320;sCanvas(c);
+}
+function setSev(btn,label){document.querySelectorAll('.sev').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');S.sev=label;}
+function saveInc(){
+  var rec={id:Date.now(),type:'incident',severity:S.sev||'Near miss',date:document.getElementById('inc-date').value,addr:document.getElementById('inc-addr').value||'No address',persons:document.getElementById('inc-persons').value,desc:document.getElementById('inc-desc').value,ts:Date.now()};
+  S.recs.unshift(rec);sv();
+  post({_subject:'AitkenTech — INCIDENT REPORT: '+rec.addr+' ('+rec.severity+')',form_type:'Incident / Near Miss Report',incident_type:rec.severity,date:fd(rec.date),time:document.getElementById('inc-time').value,location:rec.addr,persons_involved:rec.persons||'—',injury_description:document.getElementById('inc-injury').value||'None',what_happened:rec.desc||'—',immediate_cause:document.getElementById('inc-cause').value||'—',actions_taken:document.getElementById('inc-actions').value||'—',corrective_actions:document.getElementById('inc-corrective').value||'—',notifiable:rec.severity==='Lost time / notifiable'?'YES — CALL SAFE WORK NSW 13 10 50':'No',timestamp:new Date().toLocaleString('en-AU')});
+  document.getElementById('inc-form').style.display='none';
+  document.getElementById('inc-ok').style.display='block';
+}
+function resetInc(){iInc();}
+function iHaz(){
+  S.risk='';
+  document.getElementById('haz-form').style.display='block';
+  document.getElementById('haz-ok').style.display='none';
+  document.getElementById('haz-date').value=td();
+  document.getElementById('haz-target').value='';
+  ['haz-addr','haz-desc','haz-who','haz-controls','haz-by'].forEach(function(id){document.getElementById(id).value='';});
+  document.querySelectorAll('.sev').forEach(function(b){b.classList.remove('on');});
+  var c=document.getElementById('haz-canvas');c.width=c.offsetWidth||320;sCanvas(c);
+}
+function setRisk(btn,label){document.querySelectorAll('.sev').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');S.risk=label;}
+function saveHaz(){
+  var rec={id:Date.now(),type:'hazard',risk:S.risk||'Medium',date:document.getElementById('haz-date').value,addr:document.getElementById('haz-addr').value||'No address',desc:document.getElementById('haz-desc').value,ts:Date.now()};
+  S.recs.unshift(rec);sv();
+  post({_subject:'AitkenTech — Hazard Report: '+rec.addr+' (Risk: '+rec.risk+')',form_type:'Hazard Report',risk_rating:rec.risk,date:fd(rec.date),location:rec.addr,hazard_description:rec.desc||'—',who_is_at_risk:document.getElementById('haz-who').value||'—',control_measures:document.getElementById('haz-controls').value||'—',action_required_by:document.getElementById('haz-by').value||'—',target_date:fd(document.getElementById('haz-target').value),timestamp:new Date().toLocaleString('en-AU')});
+  document.getElementById('haz-form').style.display='none';
+  document.getElementById('haz-ok').style.display='block';
+}
+function resetHaz(){iHaz();}
+function rRec(){
+  var el=document.getElementById('rec-list');
+  if(!S.recs.length){el.innerHTML='<div class="empty"><div style="font-size:36px;margin-bottom:12px">&#128193;</div>No records yet.<br>Complete a form to see it here.</div>';return;}
+  var lb={swms:'Job sign-on',prestart:'Pre-start checklist',incident:'Incident report',hazard:'Hazard report'};
+  var dt={swms:'s',prestart:'p',incident:'i',hazard:'h'};
+  el.innerHTML=S.recs.map(function(r){
+    var sub=r.type==='swms'?fd(r.date)+' · '+(r.swms?r.swms.length:0)+' SWMS · '+(r.sigCount||0)+'/3 signed':r.type==='prestart'?fd(r.date)+' · '+(r.supervisor||'Aaron Aitken')+' · '+(r.checked||0)+'/'+(r.total||0)+' checks':r.type==='incident'?fd(r.date)+' · '+(r.severity||'Near miss'):fd(r.date)+' · Risk: '+(r.risk||'Medium');
+    return'<div class="rec-item"><div class="rdot '+(dt[r.type]||'s')+'"></div><div><div class="rttl">'+(r.addr||r.address||'—')+'</div><div class="rsub">'+(lb[r.type]||r.type)+' · '+sub+'</div></div><span class="rarr">&#8250;</span></div>';
+  }).join('');
+}
+function sCanvas(c){
+  var ctx=c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.strokeStyle='#1A1A2E';ctx.lineWidth=2.5;ctx.lineCap='round';ctx.lineJoin='round';
+  var dr=false,lx,ly;
+  function pos(e){var r=c.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return[t.clientX-r.left,t.clientY-r.top];}
+  c.onpointerdown=function(e){dr=true;var p=pos(e);lx=p[0];ly=p[1];c.setPointerCapture(e.pointerId);};
+  c.onpointermove=function(e){if(!dr)return;var p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p[0],p[1]);ctx.stroke();lx=p[0];ly=p[1];};
+  c.onpointerup=function(){dr=false;};
+  c.onpointerleave=function(){dr=false;};
+}
+function clrCanvas(id){var c=document.getElementById(id);c.width=c.offsetWidth||320;sCanvas(c);}
+var aT=null;
+function aLookup(fid){
+  var inp=document.getElementById(fid);
+  var drop=document.getElementById(fid+'-drop');
+  var q=inp.value.trim();
+  drop.style.display='none';drop.innerHTML='';
+  if(q.length<4)return;
+  clearTimeout(aT);
+  aT=setTimeout(function(){
+    fetch('https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=au&q='+encodeURIComponent(q))
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(!data||!data.length)return;
+        drop.innerHTML=data.map(function(r){
+          var a=r.address||{};
+          var num=a.house_number||'';var road=a.road||'';
+          var main=(num&&road)?num+' '+road:road||r.display_name.split(',')[0];
+          var suburb=a.suburb||a.town||a.city||a.village||a.municipality||'';
+          var state2=a.state||'';var post=a.postcode||'';
+          var sub=[suburb,state2,post].filter(Boolean).join(' ');
+          var full=sub?main+', '+sub:main;
+          return'<div class="addr-opt" data-val="'+full.replace(/"/g,'&quot;')+'" onclick="aPick(\''+fid+'\',this)"><b>'+main+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</div>';
+        }).join('');
+        drop.style.display='block';
+      })
+      .catch(function(){});
+  },600);
+}
+function aPick(fid,el){document.getElementById(fid).value=el.getAttribute('data-val');document.getElementById(fid+'-drop').style.display='none';}
+document.addEventListener('click',function(e){document.querySelectorAll('.addr-drop').forEach(function(d){if(d.style.display==='block'&&!d.parentElement.contains(e.target))d.style.display='none';});});
+document.getElementById('home-date').textContent=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'}).toUpperCase();
+</script>
+</body>
+</html>
